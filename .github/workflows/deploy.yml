@@ -16,14 +16,29 @@ jobs:
           host: 72.56.66.228
           username: root
           key: ${{ secrets.CF_GSR_DEPLOY_KEY }}
+          port: 22
+          timeout: 60s
           script: |
             set -e
             echo "🚀 Starting deployment at $(date)"
+            echo "📍 Current directory: $(pwd)"
+            echo "👤 User: $(whoami)"
             
-            # Запускаем деплой-скрипт
-            /usr/local/bin/cf_gsr_deploy
+            # Проверяем, что деплой-скрипт существует
+            if [ -f /usr/local/bin/cf_gsr_deploy ]; then
+              echo "✅ Deploy script found"
+              /usr/local/bin/cf_gsr_deploy
+            else
+              echo "❌ Deploy script not found, running manual deploy"
+              cd /opt/cf_gsr/repo
+              sudo -u app git fetch --all
+              sudo -u app git reset --hard origin/main
+              sudo -u app /opt/cf_gsr/repo/venv/bin/pip install -r requirements.txt || true
+              systemctl restart cf-gsr
+            fi
             
             # Проверка статуса
+            echo "🔍 Checking service status..."
             systemctl status --no-pager cf-gsr || true
             
             echo "✅ Deployment completed at $(date)"
