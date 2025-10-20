@@ -252,3 +252,4 @@ python -c "from app import create_app; from models import db; app, _ = create_ap
 
 **Внимание**: Убедитесь, что у вас есть достаточные средства на балансах всех API сервисов перед началом использования.
 # CF_GSR
+# Test CI/CD deployment
