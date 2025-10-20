@@ -1,0 +1,103 @@
+<!-- Улучшенный аудио плеер с альтернативами -->
+<div id="audioResult" class="mt-4" style="display: none;">
+    <h5 class="gsr-text-primary">Сгенерированное аудио:</h5>
+    
+    <!-- Основной HTML5 плеер -->
+    <audio controls class="w-100 mb-3" id="audioPlayer" preload="metadata">
+        <source id="audioSource" src="" type="audio/mpeg">
+        <source id="audioSourceOgg" src="" type="audio/ogg">
+        Ваш браузер не поддерживает аудио элемент.
+    </audio>
+    
+    <!-- Альтернативный плеер для Chrome -->
+    <div id="chromePlayer" class="d-none">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Chrome плеер:</strong>
+            <button class="btn btn-sm btn-primary ms-2" onclick="playChromeAudio()">
+                <i class="fas fa-play me-1"></i>Воспроизвести
+            </button>
+            <button class="btn btn-sm btn-secondary ms-1" onclick="pauseChromeAudio()">
+                <i class="fas fa-pause me-1"></i>Пауза
+            </button>
+        </div>
+    </div>
+    
+    <!-- Ссылка для скачивания -->
+    <div class="mt-2">
+        <a href="#" id="downloadLink" class="btn btn-outline-primary btn-sm" download>
+            <i class="fas fa-download me-1"></i>Скачать аудио
+        </a>
+    </div>
+    
+    <!-- Информация о файле -->
+    <div class="mt-2 text-muted small">
+        <span id="audioInfo">Готово к воспроизведению</span>
+    </div>
+</div>
+
+<script>
+// Улучшенная функция для работы с аудио
+function setupAudioPlayer(audioUrl) {
+    console.log('🎵 Настройка аудио плеера:', audioUrl);
+    
+    const audioPlayer = document.getElementById('audioPlayer');
+    const audioSource = document.getElementById('audioSource');
+    const audioSourceOgg = document.getElementById('audioSourceOgg');
+    const downloadLink = document.getElementById('downloadLink');
+    const audioInfo = document.getElementById('audioInfo');
+    const chromePlayer = document.getElementById('chromePlayer');
+    
+    // Устанавливаем источники
+    audioSource.src = audioUrl;
+    audioSourceOgg.src = audioUrl.replace('.mp3', '.ogg');
+    downloadLink.href = audioUrl;
+    
+    // Обновляем информацию
+    audioInfo.textContent = `Аудио загружено: ${audioUrl.split('/').pop()}`;
+    
+    // Проверяем поддержку браузера
+    const isChrome = /Chrome/.test(navigator.userAgent);
+    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+    
+    if (isChrome) {
+        console.log('🔧 Chrome обнаружен - показываем альтернативный плеер');
+        chromePlayer.classList.remove('d-none');
+    }
+    
+    // Обработчики событий
+    audioPlayer.addEventListener('loadedmetadata', function() {
+        console.log('✅ Метаданные аудио загружены');
+        audioInfo.textContent = `Длительность: ${Math.round(audioPlayer.duration)} сек`;
+    });
+    
+    audioPlayer.addEventListener('error', function(e) {
+        console.error('❌ Ошибка загрузки аудио:', e);
+        audioInfo.textContent = 'Ошибка загрузки аудио. Попробуйте скачать файл.';
+        
+        if (isChrome) {
+            chromePlayer.classList.remove('d-none');
+        }
+    });
+    
+    // Принудительная перезагрузка
+    audioPlayer.load();
+}
+
+// Функции для Chrome плеера
+function playChromeAudio() {
+    const audioPlayer = document.getElementById('audioPlayer');
+    audioPlayer.play().catch(e => {
+        console.error('Ошибка воспроизведения:', e);
+        alert('Не удалось воспроизвести аудио. Попробуйте скачать файл.');
+    });
+}
+
+function pauseChromeAudio() {
+    const audioPlayer = document.getElementById('audioPlayer');
+    audioPlayer.pause();
+}
+
+// Глобальная переменная для аудио
+window.currentAudioUrl = null;
+</script>

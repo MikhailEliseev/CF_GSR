@@ -1,0 +1,44 @@
+# SSH credentials and keys
+.ssh_credentials
+server_key
+server_key.pub
+.ssh_config
+
+# Deployment files
+server_deployment_package/
+server_deployment.tar.gz
+deploy_to_server.py
+
+# Logs
+*.log
+logs/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+venv/
+env/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db.env
+*.db
+instance/
+# Игнорируем все чувствительные данные
+.cursor/
+instance/
+*.db
+dump.rdb
+server_upload_package/
+server_deployment_package/
+deployment_package_*/
+*.tar.gz
+.env
+server_key*

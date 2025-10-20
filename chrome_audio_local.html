@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrome Audio Local Fix</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .audio-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .audio-player {
+            width: 100%;
+            height: 60px;
+            border-radius: 8px;
+            background: #fff;
+            border: 2px solid #dee2e6;
+        }
+        .status-box {
+            min-height: 60px;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">🔧 Chrome Audio Local Fix</h1>
+        
+        <!-- Локальный аудио файл -->
+        <div class="audio-container">
+            <h4 class="mb-3">
+                <i class="fas fa-file-audio me-2"></i>Локальный аудио файл
+            </h4>
+            
+            <audio controls class="audio-player" id="localAudioPlayer" preload="none">
+                <source id="localAudioSource" src="" type="audio/mpeg">
+                Ваш браузер не поддерживает аудио элемент.
+            </audio>
+            
+            <div class="mt-3">
+                <button class="btn btn-primary me-2" onclick="loadLocalAudio()">
+                    <i class="fas fa-download me-1"></i>Загрузить локальный аудио
+                </button>
+                <button class="btn btn-success me-2" onclick="playLocalAudio()">
+                    <i class="fas fa-play me-1"></i>Воспроизвести
+                </button>
+            </div>
+            
+            <div id="localStatus" class="status-box alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Готов к загрузке локального аудио
+            </div>
+        </div>
+        
+        <!-- Создание локального аудио -->
+        <div class="audio-container">
+            <h4 class="mb-3">
+                <i class="fas fa-microphone me-2"></i>Создание локального аудио
+            </h4>
+            
+            <button class="btn btn-info me-2" onclick="createLocalAudio()">
+                <i class="fas fa-plus me-1"></i>Создать локальный аудио
+            </button>
+            <button class="btn btn-warning me-2" onclick="downloadAudio()">
+                <i class="fas fa-download me-1"></i>Скачать аудио
+            </button>
+            
+            <div id="createStatus" class="status-box alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Готов к созданию локального аудио
+            </div>
+        </div>
+        
+        <!-- Тест локального сервера -->
+        <div class="audio-container">
+            <h4 class="mb-3">
+                <i class="fas fa-server me-2"></i>Тест локального сервера
+            </h4>
+            
+            <button class="btn btn-success me-2" onclick="testLocalServer()">
+                <i class="fas fa-play me-1"></i>Тест локального сервера
+            </button>
+            <button class="btn btn-info" onclick="testProxyServer()">
+                <i class="fas fa-shield-alt me-1"></i>Тест прокси сервера
+            </button>
+            
+            <div id="serverStatus" class="status-box alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Готов к тестированию серверов
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Загрузка локального аудио
+        function loadLocalAudio() {
+            const audioPlayer = document.getElementById('localAudioPlayer');
+            const audioSource = document.getElementById('localAudioSource');
+            const status = document.getElementById('localStatus');
+            
+            // Используем локальный аудио файл
+            const localAudioUrl = '/static/audio/test_hello.mp3';
+            
+            status.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Загружаем локальный аудио...
+                </div>`;
+            
+            // Устанавливаем источник
+            audioSource.src = localAudioUrl;
+            
+            // Обработчики
+            audioPlayer.addEventListener('loadedmetadata', function() {
+                console.log('✅ Метаданные загружены');
+                status.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Локальный аудио загружен! Длительность: ${Math.round(audioPlayer.duration)} сек
+                    </div>`;
+            });
+            
+            audioPlayer.addEventListener('error', function(e) {
+                console.error('❌ Ошибка загрузки:', e);
+                status.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Ошибка загрузки локального аудио: ${e.message}
+                    </div>`;
+            });
+            
+            // Принудительная загрузка
+            audioPlayer.load();
+        }
+        
+        function playLocalAudio() {
+            const audioPlayer = document.getElementById('localAudioPlayer');
+            const status = document.getElementById('localStatus');
+            
+            if (audioPlayer.readyState < 2) {
+                status.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Аудио еще загружается...
+                    </div>`;
+                return;
+            }
+            
+            const playPromise = audioPlayer.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    status.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-play me-2"></i>
+                            Воспроизведение началось
+                        </div>`;
+                }).catch(error => {
+                    status.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Ошибка воспроизведения: ${error.message}
+                        </div>`;
+                });
+            }
+        }
+        
+        // Создание локального аудио
+        function createLocalAudio() {
+            const status = document.getElementById('createStatus');
+            
+            status.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Создаем локальный аудио...
+                </div>`;
+            
+            // Создаем простой аудио файл
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 2);
+            
+            status.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Локальный аудио создан! Длительность: 2 сек
+                </div>`;
+        }
+        
+        function downloadAudio() {
+            const status = document.getElementById('createStatus');
+            
+            status.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Скачиваем аудио...
+                </div>`;
+            
+            // Создаем ссылку для скачивания
+            const link = document.createElement('a');
+            link.href = '/static/audio/test_hello.mp3';
+            link.download = 'test_audio.mp3';
+            link.click();
+            
+            status.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Аудио скачано!
+                </div>`;
+        }
+        
+        // Тест локального сервера
+        function testLocalServer() {
+            const status = document.getElementById('serverStatus');
+            
+            status.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Тестируем локальный сервер...
+                </div>`;
+            
+            // Тест локального сервера
+            fetch('/api/trends/generate-audio', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    text: 'Тестовое аудио для Chrome'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    status.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Локальный сервер работает! Аудио: ${data.audio_url}
+                        </div>`;
+                } else {
+                    status.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Локальный сервер частично работает: ${data.message}
+                        </div>`;
+                }
+            })
+            .catch(error => {
+                status.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Ошибка локального сервера: ${error.message}
+                    </div>`;
+            });
+        }
+        
+        function testProxyServer() {
+            const status = document.getElementById('serverStatus');
+            
+            status.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Тестируем прокси сервер...
+                </div>`;
+            
+            // Тест прокси сервера
+            fetch('http://localhost:8083/api/proxy-audio?url=' + encodeURIComponent('http://72.56.66.228/static/audio/placeholder_c7f21c20d725411ea47c1a46a036127c.mp3'))
+            .then(response => {
+                if (response.ok) {
+                    status.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Прокси сервер работает! Статус: ${response.status}
+                        </div>`;
+                } else {
+                    status.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Прокси сервер частично работает. Статус: ${response.status}
+                        </div>`;
+                }
+            })
+            .catch(error => {
+                status.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Ошибка прокси сервера: ${error.message}
+                    </div>`;
+            });
+        }
+    </script>
+</body>
+</html>

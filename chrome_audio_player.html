@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎵 Chrome Audio Player - CORS Fix</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .chrome-warning {
+            background: #fff3cd;
+            border: 2px solid #ffeaa7;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+        .chrome-warning h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+        .audio-player {
+            width: 100%;
+            height: 80px;
+            border-radius: 12px;
+            background: #f8f9fa;
+            border: 3px solid #e1e8ed;
+            margin: 20px 0;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.warning { background: #fff3cd; color: #856404; }
+        button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        .solution-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border-left: 4px solid #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Chrome Audio Player</h1>
+        
+        <div class="chrome-warning">
+            <h3>⚠️ Chrome CORS Предупреждение</h3>
+            <p>Chrome блокирует воспроизведение аудио с localhost из-за политики CORS. Используйте один из решений ниже:</p>
+        </div>
+        
+        <div class="solution-card">
+            <h3>🔧 Решение 1: Запуск Chrome с отключенной безопасностью</h3>
+            <p>Выполните команду в терминале:</p>
+            <div class="code-block">
+open -a "Google Chrome" --args --disable-web-security --user-data-dir="/tmp/chrome_dev"
+            </div>
+            <button onclick="testChromeFix()">🧪 Тест после применения фикса</button>
+        </div>
+        
+        <div class="solution-card">
+            <h3>🔧 Решение 2: Использование Safari</h3>
+            <p>Safari не имеет проблем с CORS и работает из коробки:</p>
+            <button onclick="openInSafari()">🦁 Открыть в Safari</button>
+        </div>
+        
+        <div class="solution-card">
+            <h3>🔧 Решение 3: Прямая ссылка на файл</h3>
+            <p>Откройте аудио файл напрямую в новой вкладке:</p>
+            <button onclick="testDirectLink()">🔗 Тест прямой ссылки</button>
+            <div id="directLinkResult"></div>
+        </div>
+        
+        <div class="solution-card">
+            <h3>🎵 Тест аудио плеера</h3>
+            <button onclick="generateTestAudio()">🎵 Сгенерировать тестовое аудио</button>
+            <div id="generationStatus" class="status info" style="display: none;"></div>
+            
+            <audio id="chromePlayer" class="audio-player" controls>
+                Ваш браузер не поддерживает аудио элемент.
+            </audio>
+            <div id="playerStatus" class="status info" style="display: none;"></div>
+            
+            <button onclick="playAudio()">▶️ Воспроизвести</button>
+            <button onclick="pauseAudio()">⏸️ Пауза</button>
+            <button onclick="stopAudio()">⏹️ Стоп</button>
+        </div>
+        
+        <div class="solution-card">
+            <h3>📊 Диагностика</h3>
+            <button onclick="runDiagnostics()">🔍 Запустить диагностику</button>
+            <div id="diagnostics" class="status info" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentAudioUrl = null;
+        
+        // Генерация тестового аудио
+        async function generateTestAudio() {
+            const status = document.getElementById('generationStatus');
+            status.style.display = 'block';
+            status.textContent = '🎵 Генерируем тестовое аудио...';
+            status.className = 'status info';
+            
+            try {
+                const response = await fetch('/api/trends/generate-audio', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: "Привет! Это тест аудио плеера для Chrome с обходом CORS проблем.",
+                        voice_id: "jP9L6ZC55cz5mmx4ZpCk",
+                        model_id: "eleven_flash_v2_5",
+                        speed: 1.0,
+                        stability: 0.5,
+                        similarity_boost: 0.5
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    status.textContent = '✅ Аудио сгенерировано успешно!';
+                    status.className = 'status success';
+                    currentAudioUrl = result.audio_url;
+                    
+                    // Загружаем в плеер
+                    const player = document.getElementById('chromePlayer');
+                    player.src = currentAudioUrl;
+                    player.load();
+                    
+                    const playerStatus = document.getElementById('playerStatus');
+                    playerStatus.style.display = 'block';
+                    playerStatus.textContent = '✅ Аудио загружено в плеер';
+                    playerStatus.className = 'status success';
+                    
+                } else {
+                    status.textContent = '❌ Ошибка: ' + result.message;
+                    status.className = 'status error';
+                }
+                
+            } catch (error) {
+                status.textContent = '❌ Ошибка CORS: ' + error.message;
+                status.className = 'status error';
+                console.error('CORS Error:', error);
+                
+                // Показываем инструкции для Chrome
+                status.innerHTML = `
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                        <strong>Chrome блокирует CORS запросы!</strong><br>
+                        Запустите Chrome с отключенной безопасностью:<br>
+                        <code style="background: #f8f9fa; padding: 8px; border-radius: 4px; display: block; margin: 10px 0;">
+                            open -a "Google Chrome" --args --disable-web-security --user-data-dir="/tmp/chrome_dev"
+                        </code>
+                    </div>
+                `;
+            }
+        }
+        
+        // Воспроизведение аудио
+        function playAudio() {
+            const player = document.getElementById('chromePlayer');
+            if (player.src) {
+                player.play().then(() => {
+                    const status = document.getElementById('playerStatus');
+                    status.textContent = '▶️ Воспроизведение началось';
+                    status.className = 'status success';
+                }).catch(e => {
+                    const status = document.getElementById('playerStatus');
+                    status.textContent = '❌ Ошибка воспроизведения: ' + e.message;
+                    status.className = 'status error';
+                    console.error('Play error:', e);
+                });
+            } else {
+                alert('Сначала сгенерируйте аудио!');
+            }
+        }
+        
+        function pauseAudio() {
+            const player = document.getElementById('chromePlayer');
+            player.pause();
+            const status = document.getElementById('playerStatus');
+            status.textContent = '⏸️ Воспроизведение приостановлено';
+            status.className = 'status info';
+        }
+        
+        function stopAudio() {
+            const player = document.getElementById('chromePlayer');
+            player.pause();
+            player.currentTime = 0;
+            const status = document.getElementById('playerStatus');
+            status.textContent = '⏹️ Воспроизведение остановлено';
+            status.className = 'status info';
+        }
+        
+        // Тест фикса Chrome
+        function testChromeFix() {
+            alert('После применения фикса перезагрузите страницу и попробуйте снова!');
+        }
+        
+        // Открытие в Safari
+        function openInSafari() {
+            const currentUrl = window.location.href;
+            const safariUrl = currentUrl.replace('localhost:8080', 'localhost:8080');
+            window.open(safariUrl, '_blank');
+        }
+        
+        // Тест прямой ссылки
+        function testDirectLink() {
+            if (currentAudioUrl) {
+                const directUrl = window.location.origin + currentAudioUrl;
+                window.open(directUrl, '_blank');
+                
+                const result = document.getElementById('directLinkResult');
+                result.innerHTML = `
+                    <div class="status success">
+                        ✅ Прямая ссылка: <a href="${directUrl}" target="_blank">${directUrl}</a>
+                    </div>
+                `;
+            } else {
+                alert('Сначала сгенерируйте аудио!');
+            }
+        }
+        
+        // Диагностика
+        function runDiagnostics() {
+            const diagnostics = document.getElementById('diagnostics');
+            diagnostics.style.display = 'block';
+            
+            let report = '<h4>🔍 Диагностический отчет:</h4>';
+            
+            // Проверка браузера
+            const userAgent = navigator.userAgent;
+            if (userAgent.includes('Chrome')) {
+                report += '<p>✅ Обнаружен Google Chrome</p>';
+            } else if (userAgent.includes('Safari')) {
+                report += '<p>✅ Обнаружен Safari</p>';
+            } else {
+                report += '<p>⚠️ Неизвестный браузер</p>';
+            }
+            
+            // Проверка поддержки аудио
+            const audio = document.createElement('audio');
+            if (audio.canPlayType) {
+                report += '<p>✅ HTML5 Audio поддерживается</p>';
+            } else {
+                report += '<p>❌ HTML5 Audio не поддерживается</p>';
+            }
+            
+            // Проверка CORS
+            report += '<p>🔍 CORS: Проверяется при генерации аудио...</p>';
+            
+            diagnostics.innerHTML = report;
+        }
+        
+        // Обработчики событий плеера
+        document.addEventListener('DOMContentLoaded', function() {
+            const player = document.getElementById('chromePlayer');
+            const status = document.getElementById('playerStatus');
+            
+            player.addEventListener('loadstart', () => {
+                status.style.display = 'block';
+                status.textContent = '🔄 Загрузка началась...';
+                status.className = 'status info';
+            });
+            
+            player.addEventListener('canplay', () => {
+                status.textContent = '✅ Аудио готово к воспроизведению';
+                status.className = 'status success';
+            });
+            
+            player.addEventListener('error', (e) => {
+                status.textContent = '❌ Ошибка загрузки аудио';
+                status.className = 'status error';
+                console.error('Player error:', e);
+            });
+        });
+    </script>
+</body>
+</html>

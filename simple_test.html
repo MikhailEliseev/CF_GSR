@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎵 Простой тест плеера</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 20px; border: 2px solid #e0e0e0; border-radius: 8px; }
+        .success { border-color: #4CAF50; background: #f1f8e9; }
+        .error { border-color: #f44336; background: #ffebee; }
+        .info { border-color: #2196F3; background: #e3f2fd; }
+        button { padding: 12px 24px; margin: 8px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; }
+        .btn-primary { background: #2196F3; color: white; }
+        .btn-success { background: #4CAF50; color: white; }
+        .btn-danger { background: #f44336; color: white; }
+        audio { width: 100%; margin: 10px 0; }
+        input[type="text"] { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
+        .status { padding: 12px; margin: 10px 0; border-radius: 6px; font-weight: bold; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Простой тест аудио плеера</h1>
+        
+        <div class="test-section info">
+            <h3>📊 Статус системы</h3>
+            <div id="systemStatus" class="status info">Проверка подключения...</div>
+            <button class="btn-primary" onclick="checkSystem()">🔄 Проверить систему</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎵 Тест 1: Существующий аудио файл</h3>
+            <audio controls id="audio1">
+                <source src="http://localhost:5001/static/audio/placeholder_8c63373d0fe74319875c84d54de6b0b0.mp3" type="audio/mpeg">
+                Ваш браузер не поддерживает аудио элемент.
+            </audio>
+            <div id="status1" class="status info">Загрузка...</div>
+            <button class="btn-success" onclick="playAudio1()">▶️ Воспроизвести</button>
+            <button class="btn-danger" onclick="pauseAudio1()">⏸️ Пауза</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎤 Тест 2: Генерация нового аудио</h3>
+            <input type="text" id="audioText" placeholder="Введите текст для озвучки..." value="Привет! Это тест аудио плеера.">
+            <br>
+            <button class="btn-primary" onclick="generateNewAudio()">🎤 Сгенерировать аудио</button>
+            <div id="status2" class="status info">Готов к генерации</div>
+            
+            <div id="newAudioSection" style="display: none; margin-top: 20px;">
+                <h4>🎵 Новое аудио:</h4>
+                <audio controls id="audio2">
+                    <source id="audio2Source" src="" type="audio/mpeg">
+                    Ваш браузер не поддерживает аудио элемент.
+                </audio>
+                <div id="status3" class="status info">Загрузка...</div>
+                <button class="btn-success" onclick="playAudio2()">▶️ Воспроизвести</button>
+                <button class="btn-danger" onclick="pauseAudio2()">⏸️ Пауза</button>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📋 Информация о файлах</h3>
+            <div id="fileInfo">
+                <p><strong>Сервер:</strong> http://localhost:5001</p>
+                <p><strong>API:</strong> /api/generate-audio</p>
+                <p><strong>Статус:</strong> <span id="apiStatus">Проверка...</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Глобальные переменные
+        let audio1, audio2;
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            audio1 = document.getElementById('audio1');
+            audio2 = document.getElementById('audio2');
+            checkSystem();
+        });
+        
+        // Проверка системы
+        async function checkSystem() {
+            const status = document.getElementById('systemStatus');
+            const apiStatus = document.getElementById('apiStatus');
+            
+            status.textContent = '🔄 Проверка подключения...';
+            status.className = 'status info';
+            
+            try {
+                // Проверяем основной сервер
+                const serverResponse = await fetch('http://localhost:5001/', { mode: 'no-cors' });
+                
+                // Проверяем API
+                const apiResponse = await fetch('http://localhost:5001/api/generate-audio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: 'test' })
+                });
+                
+                if (apiResponse.ok) {
+                    status.textContent = '✅ Система работает корректно';
+                    status.className = 'status success';
+                    apiStatus.textContent = '✅ API доступен';
+                } else {
+                    status.textContent = '⚠️ Сервер работает, но API недоступен';
+                    status.className = 'status error';
+                    apiStatus.textContent = '❌ API недоступен';
+                }
+            } catch (error) {
+                status.textContent = '❌ Сервер недоступен: ' + error.message;
+                status.className = 'status error';
+                apiStatus.textContent = '❌ Сервер недоступен';
+                console.error('System check error:', error);
+            }
+        }
+        
+        // Обработчики для первого аудио
+        audio1.addEventListener('loadstart', () => {
+            document.getElementById('status1').textContent = '🔄 Загрузка началась...';
+            document.getElementById('status1').className = 'status info';
+        });
+        
+        audio1.addEventListener('canplay', () => {
+            document.getElementById('status1').textContent = '✅ Аудио готово к воспроизведению';
+            document.getElementById('status1').className = 'status success';
+        });
+        
+        audio1.addEventListener('error', (e) => {
+            document.getElementById('status1').textContent = '❌ Ошибка загрузки аудио';
+            document.getElementById('status1').className = 'status error';
+            console.error('Audio1 error:', e);
+        });
+        
+        function playAudio1() {
+            audio1.play().then(() => {
+                document.getElementById('status1').textContent = '▶️ Воспроизведение началось';
+                document.getElementById('status1').className = 'status success';
+            }).catch(e => {
+                document.getElementById('status1').textContent = '❌ Ошибка воспроизведения: ' + e.message;
+                document.getElementById('status1').className = 'status error';
+            });
+        }
+        
+        function pauseAudio1() {
+            audio1.pause();
+            document.getElementById('status1').textContent = '⏸️ Воспроизведение приостановлено';
+            document.getElementById('status1').className = 'status info';
+        }
+        
+        // Генерация нового аудио
+        async function generateNewAudio() {
+            const text = document.getElementById('audioText').value;
+            const status2 = document.getElementById('status2');
+            
+            if (!text.trim()) {
+                alert('Введите текст для генерации');
+                return;
+            }
+            
+            status2.textContent = '🔄 Генерация аудио...';
+            status2.className = 'status info';
+            
+            try {
+                const response = await fetch('http://localhost:5001/api/generate-audio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    status2.textContent = '✅ Аудио сгенерировано: ' + result.audio_url;
+                    status2.className = 'status success';
+                    
+                    // Показываем новое аудио
+                    const newAudioSection = document.getElementById('newAudioSection');
+                    const audio2Source = document.getElementById('audio2Source');
+                    
+                    audio2Source.src = 'http://localhost:5001' + result.audio_url;
+                    newAudioSection.style.display = 'block';
+                    audio2.load();
+                } else {
+                    status2.textContent = '❌ Ошибка: ' + result.message;
+                    status2.className = 'status error';
+                }
+            } catch (error) {
+                status2.textContent = '❌ Ошибка сети: ' + error.message;
+                status2.className = 'status error';
+                console.error('Generate audio error:', error);
+            }
+        }
+        
+        // Обработчики для второго аудио
+        audio2.addEventListener('loadstart', () => {
+            document.getElementById('status3').textContent = '🔄 Загрузка началась...';
+            document.getElementById('status3').className = 'status info';
+        });
+        
+        audio2.addEventListener('canplay', () => {
+            document.getElementById('status3').textContent = '✅ Аудио готово к воспроизведению';
+            document.getElementById('status3').className = 'status success';
+        });
+        
+        audio2.addEventListener('error', (e) => {
+            document.getElementById('status3').textContent = '❌ Ошибка загрузки аудио';
+            document.getElementById('status3').className = 'status error';
+            console.error('Audio2 error:', e);
+        });
+        
+        function playAudio2() {
+            audio2.play().then(() => {
+                document.getElementById('status3').textContent = '▶️ Воспроизведение началось';
+                document.getElementById('status3').className = 'status success';
+            }).catch(e => {
+                document.getElementById('status3').textContent = '❌ Ошибка воспроизведения: ' + e.message;
+                document.getElementById('status3').className = 'status error';
+            });
+        }
+        
+        function pauseAudio2() {
+            audio2.pause();
+            document.getElementById('status3').textContent = '⏸️ Воспроизведение приостановлено';
+            document.getElementById('status3').className = 'status info';
+        }
+    </script>
+</body>
+</html>

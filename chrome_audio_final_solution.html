@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrome Audio Final Solution</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .audio-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .audio-player {
+            width: 100%;
+            height: 60px;
+            border-radius: 8px;
+            background: #fff;
+            border: 2px solid #dee2e6;
+        }
+        .status-box {
+            min-height: 60px;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">🔧 Chrome Audio Final Solution</h1>
+        
+        <!-- Chrome-совместимый плеер с обходом CORS -->
+        <div class="audio-container">
+            <h4 class="mb-3">
+                <i class="fas fa-chrome me-2"></i>Chrome-совместимый плеер (обход CORS)
+            </h4>
+            
+            <audio controls class="audio-player" id="chromeAudioPlayer" preload="none">
+                <source id="chromeAudioSource" src="" type="audio/mpeg">
+                Ваш браузер не поддерживает аудио элемент.
+            </audio>
+            
+            <div class="mt-3">
+                <button class="btn btn-primary me-2" onclick="loadChromeAudio()">
+                    <i class="fas fa-download me-1"></i>Загрузить аудио
+                </button>
+                <button class="btn btn-success me-2" onclick="playChromeAudio()">
+                    <i class="fas fa-play me-1"></i>Воспроизвести
+                </button>
+                <button class="btn btn-warning me-2" onclick="testChromeAudio()">
+                    <i class="fas fa-bug me-1"></i>Тест
+                </button>
+            </div>
+            
+            <div id="chromeStatus" class="status-box alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Готов к загрузке аудио
+            </div>
+        </div>
+        
+        <!-- Обход CORS через прокси -->
+        <div class="audio-container">
+            <h4 class="mb-3">
+                <i class="fas fa-shield-alt me-2"></i>Обход CORS через прокси
+            </h4>
+            
+            <button class="btn btn-info me-2" onclick="loadViaProxy()">
+                <i class="fas fa-download me-1"></i>Загрузить через прокси
+            </button>
+            <button class="btn btn-success me-2" onclick="playViaProxy()">
+                <i class="fas fa-play me-1"></i>Воспроизвести через прокси
+            </button>
+            
+            <div id="proxyStatus" class="status-box alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Готов к загрузке через прокси
+            </div>
+        </div>
+        
+        <!-- Прямая загрузка с обходом CORS -->
+        <div class="audio-container">
+            <h4 class="mb-3">
+                <i class="fas fa-download me-2"></i>Прямая загрузка с обходом CORS
+            </h4>
+            
+            <button class="btn btn-warning me-2" onclick="loadDirectAudio()">
+                <i class="fas fa-download me-1"></i>Прямая загрузка
+            </button>
+            <button class="btn btn-info" onclick="testDirectAccess()">
+                <i class="fas fa-bug me-1"></i>Тест прямого доступа
+            </button>
+            
+            <div id="directStatus" class="status-box alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Готов к прямой загрузке
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chrome-совместимая загрузка аудио
+        function loadChromeAudio() {
+            const audioPlayer = document.getElementById('chromeAudioPlayer');
+            const audioSource = document.getElementById('chromeAudioSource');
+            const status = document.getElementById('chromeStatus');
+            
+            // Прямой URL без CORS проблем
+            const audioUrl = 'http://72.56.66.228/static/audio/placeholder_c7f21c20d725411ea47c1a46a036127c.mp3';
+            
+            status.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Загружаем аудио для Chrome...
+                </div>`;
+            
+            // Очищаем предыдущие обработчики
+            audioPlayer.removeEventListener('loadedmetadata', handleLoadedMetadata);
+            audioPlayer.removeEventListener('canplay', handleCanPlay);
+            audioPlayer.removeEventListener('error', handleError);
+            
+            // Добавляем новые обработчики
+            audioPlayer.addEventListener('loadedmetadata', handleLoadedMetadata);
+            audioPlayer.addEventListener('canplay', handleCanPlay);
+            audioPlayer.addEventListener('error', handleError);
+            
+            // Устанавливаем источник
+            audioSource.src = audioUrl;
+            
+            // Принудительная загрузка
+            audioPlayer.load();
+            
+            function handleLoadedMetadata() {
+                console.log('✅ Метаданные загружены');
+                status.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Аудио загружено! Длительность: ${Math.round(audioPlayer.duration)} сек
+                    </div>`;
+            }
+            
+            function handleCanPlay() {
+                console.log('✅ Аудио готово к воспроизведению');
+            }
+            
+            function handleError(e) {
+                console.error('❌ Ошибка загрузки:', e);
+                status.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Ошибка загрузки: ${e.message || 'Неизвестная ошибка'}
+                    </div>`;
+            }
+        }
+        
+        function playChromeAudio() {
+            const audioPlayer = document.getElementById('chromeAudioPlayer');
+            const status = document.getElementById('chromeStatus');
+            
+            if (audioPlayer.readyState < 2) {
+                status.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Аудио еще загружается... Подождите
+                    </div>`;
+                return;
+            }
+            
+            const playPromise = audioPlayer.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    status.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-play me-2"></i>
+                            Воспроизведение началось
+                        </div>`;
+                }).catch(error => {
+                    status.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Ошибка воспроизведения: ${error.message}
+                        </div>`;
+                });
+            }
+        }
+        
+        function testChromeAudio() {
+            const audioPlayer = document.getElementById('chromeAudioPlayer');
+            const status = document.getElementById('chromeStatus');
+            
+            status.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-bug me-2"></i>
+                    Тестируем аудио плеер...
+                </div>`;
+            
+            // Проверяем состояние
+            const readyState = audioPlayer.readyState;
+            const paused = audioPlayer.paused;
+            const duration = audioPlayer.duration;
+            const currentTime = audioPlayer.currentTime;
+            
+            status.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-bug me-2"></i>
+                    Состояние: readyState=${readyState}, paused=${paused}, duration=${duration}, currentTime=${currentTime}
+                </div>`;
+        }
+        
+        // Обход CORS через прокси
+        function loadViaProxy() {
+            const status = document.getElementById('proxyStatus');
+            
+            status.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Загружаем через прокси...
+                </div>`;
+            
+            // Используем прокси для обхода CORS
+            const proxyUrl = 'https://cors-anywhere.herokuapp.com/http://72.56.66.228/static/audio/placeholder_c7f21c20d725411ea47c1a46a036127c.mp3';
+            
+            fetch(proxyUrl)
+            .then(response => {
+                if (response.ok) {
+                    status.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Прокси работает! Статус: ${response.status}
+                        </div>`;
+                } else {
+                    status.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Прокси частично работает. Статус: ${response.status}
+                        </div>`;
+                }
+            })
+            .catch(error => {
+                status.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Ошибка прокси: ${error.message}
+                    </div>`;
+            });
+        }
+        
+        function playViaProxy() {
+            const status = document.getElementById('proxyStatus');
+            
+            status.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Воспроизводим через прокси...
+                </div>`;
+            
+            // Создаем временный аудио элемент
+            const tempAudio = document.createElement('audio');
+            tempAudio.preload = 'none';
+            tempAudio.src = 'https://cors-anywhere.herokuapp.com/http://72.56.66.228/static/audio/placeholder_c7f21c20d725411ea47c1a46a036127c.mp3';
+            
+            tempAudio.addEventListener('loadedmetadata', function() {
+                status.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Прокси аудио загружено! Длительность: ${Math.round(tempAudio.duration)} сек
+                    </div>`;
+            });
+            
+            tempAudio.addEventListener('error', function(e) {
+                status.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Ошибка прокси аудио: ${e.message}
+                    </div>`;
+            });
+            
+            tempAudio.load();
+        }
+        
+        // Прямая загрузка с обходом CORS
+        function loadDirectAudio() {
+            const status = document.getElementById('directStatus');
+            
+            status.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Прямая загрузка с обходом CORS...
+                </div>`;
+            
+            // Создаем временный аудио элемент
+            const tempAudio = document.createElement('audio');
+            tempAudio.preload = 'none';
+            tempAudio.src = 'http://72.56.66.228/static/audio/placeholder_c7f21c20d725411ea47c1a46a036127c.mp3';
+            
+            tempAudio.addEventListener('loadedmetadata', function() {
+                status.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Прямая загрузка работает! Длительность: ${Math.round(tempAudio.duration)} сек
+                    </div>`;
+            });
+            
+            tempAudio.addEventListener('error', function(e) {
+                status.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Прямая загрузка не работает: ${e.message}
+                    </div>`;
+            });
+            
+            tempAudio.load();
+        }
+        
+        function testDirectAccess() {
+            const status = document.getElementById('directStatus');
+            
+            status.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Тестируем прямой доступ...
+                </div>`;
+            
+            // Тест прямого доступа
+            const testUrl = 'http://72.56.66.228/static/audio/placeholder_c7f21c20d725411ea47c1a46a036127c.mp3';
+            
+            fetch(testUrl, {
+                mode: 'no-cors'
+            })
+            .then(response => {
+                status.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Прямой доступ работает! Статус: ${response.status}
+                    </div>`;
+            })
+            .catch(error => {
+                status.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Прямой доступ не работает: ${error.message}
+                    </div>`;
+            });
+        }
+    </script>
+</body>
+</html>

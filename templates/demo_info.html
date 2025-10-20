@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Демо режим - Контент Завод{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Демо режим активен
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h5>🚀 Добро пожаловать в Контент Завод!</h5>
+                    <p class="mb-0">
+                        Система запущена в демонстрационном режиме, так как Redis недоступен.
+                        Все функции интерфейса работают, но генерация происходит в демо-режиме.
+                    </p>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-success">✅ Что работает:</h6>
+                        <ul>
+                            <li>Полный веб-интерфейс</li>
+                            <li>Настройки модулей</li>
+                            <li>Управление конкурентами</li>
+                            <li>Генерация тем экспертов</li>
+                            <li>Демо-генерация видео</li>
+                            <li>Сохранение настроек</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-warning">⚠️ Демо-режим:</h6>
+                        <ul>
+                            <li>Нет реальных API вызовов</li>
+                            <li>Нет фоновых задач</li>
+                            <li>Демо результаты генерации</li>
+                            <li>Нет реальной озвучки</li>
+                            <li>Нет создания видео</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h5>🔧 Для полной функциональности:</h5>
+                <ol>
+                    <li><strong>Установите Redis:</strong>
+                        <div class="bg-light p-2 rounded mt-2">
+                            <code>brew install redis && brew services start redis</code>
+                        </div>
+                    </li>
+                    <li><strong>Создайте OpenAI Assistants</strong> в OpenAI Platform</li>
+                    <li><strong>Добавьте Assistant ID</strong> в настройки модулей</li>
+                    <li><strong>Проверьте API ключи</strong> и балансы</li>
+                    <li><strong>Запустите полную версию:</strong>
+                        <div class="bg-light p-2 rounded mt-2">
+                            <code>python3 run.py</code>
+                        </div>
+                    </li>
+                </ol>
+
+                <hr>
+
+                <div class="text-center">
+                    <a href="/" class="btn btn-primary me-3">
+                        <i class="fas fa-home me-2"></i>
+                        На главную
+                    </a>
+                    <button class="btn btn-success" onclick="testDemo()">
+                        <i class="fas fa-play me-2"></i>
+                        Тестировать демо
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0">Модуль Трендвотчинг</h6>
+            </div>
+            <div class="card-body">
+                <p class="small">
+                    В демо-режиме показывает пример анализа трендов без реального парсинга.
+                </p>
+                <a href="/module/trends" class="btn btn-primary btn-sm">Тестировать</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0">Модуль Вакансии</h6>
+            </div>
+            <div class="card-body">
+                <p class="small">
+                    В демо-режиме показывает пример работы с вакансиями без реального API.
+                </p>
+                <a href="/module/vacancies" class="btn btn-success btn-sm">Тестировать</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0">Модуль Эксперты</h6>
+            </div>
+            <div class="card-body">
+                <p class="small">
+                    В демо-режиме генерирует предустановленные темы для демонстрации.
+                </p>
+                <a href="/module/experts" class="btn btn-warning btn-sm">Тестировать</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function testDemo() {
+    alert('🎉 Демо режим работает! Вы можете тестировать все модули.\n\n' +
+          '✅ Интерфейс полностью функционален\n' +
+          '⚠️ Генерация работает в демо-режиме\n' +
+          '🔧 Для полной функциональности установите Redis');
+}
+
+// Показываем информацию о демо-режиме при загрузке
+document.addEventListener('DOMContentLoaded', function() {
+    const toast = document.createElement('div');
+    toast.className = 'toast position-fixed bottom-0 end-0 m-3';
+    toast.innerHTML = `
+        <div class="toast-header bg-warning">
+            <strong class="me-auto">Демо режим</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">
+            Система работает в демонстрационном режиме
+        </div>
+    `;
+    document.body.appendChild(toast);
+    
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+});
+</script>
+{% endblock %}

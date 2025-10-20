@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Контент Завод</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-bg: #ecf0f1;
+            --white: #ffffff;
+            --text-dark: #2c3e50;
+            --text-light: #7f8c8d;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-dark);
+        }
+        
+        .hero-section {
+            padding: 80px 0;
+            color: white;
+            text-align: center;
+        }
+        
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .hero-subtitle {
+            font-size: 1.3rem;
+            margin-bottom: 3rem;
+            opacity: 0.9;
+        }
+        
+        .module-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 40px 30px;
+            margin: 20px 0;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: none;
+            text-align: center;
+        }
+        
+        .module-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        }
+        
+        .module-icon {
+            font-size: 4rem;
+            margin-bottom: 25px;
+            color: var(--accent-color);
+        }
+        
+        .module-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text-dark);
+        }
+        
+        .module-description {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .btn-module {
+            background: linear-gradient(45deg, var(--accent-color), #5dade2);
+            border: none;
+            color: white;
+            padding: 15px 35px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn-module:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+            color: white;
+        }
+        
+        .btn-module i {
+            margin-right: 8px;
+        }
+        
+        .container {
+            max-width: 1200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="hero-section">
+        <div class="container">
+            <h1 class="hero-title">
+                <i class="fas fa-factory me-3"></i>
+                Контент Завод
+            </h1>
+            <p class="hero-subtitle">Автоматизированная платформа для создания видеороликов с ИИ</p>
+            
+            <div class="row">
+                <div class="col-lg-4 col-md-6">
+                    <div class="module-card">
+                        <div class="module-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3 class="module-title">Трендвотчинг</h3>
+                        <p class="module-description">
+                            Анализ трендов и создание контента на основе виральных постов Instagram
+                        </p>
+                        <a href="/module/trends" class="btn-module">
+                            <i class="fas fa-play"></i>Запустить
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6">
+                    <div class="module-card">
+                        <div class="module-icon">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <h3 class="module-title">Эксперты</h3>
+                        <p class="module-description">
+                            Генерация экспертного контента и обучающих материалов с помощью ИИ
+                        </p>
+                        <a href="/module/experts" class="btn-module">
+                            <i class="fas fa-play"></i>Запустить
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6">
+                    <div class="module-card">
+                        <div class="module-icon">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <h3 class="module-title">Вакансии</h3>
+                        <p class="module-description">
+                            Создание привлекательных видео-объявлений для вакансий
+                        </p>
+                        <a href="/module/vacancies" class="btn-module">
+                            <i class="fas fa-play"></i>Запустить
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,423 @@
+{% extends "base.html" %}
+
+{% block title %}Модуль Вакансий - Контент Завод{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* ПОЛНАЯ КОПИЯ СТИЛЕЙ ИЗ ТРЕНДВОТЧИНГА */
+    .progress-step {
+        margin-bottom: 30px !important;
+        box-shadow: 0 8px 32px rgba(0, 64, 39, 0.12) !important;
+        border-radius: 16px !important;
+        border: 1px solid rgba(0, 64, 39, 0.08) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .progress-step:hover {
+        box-shadow: 0 12px 40px rgba(0, 64, 39, 0.18) !important;
+        transform: translateY(-2px) !important;
+    }
+    
+    .progress-step.step-active {
+        border-color: var(--gsr-accent) !important;
+        box-shadow: 0 8px 32px rgba(39, 145, 52, 0.15) !important;
+    }
+    
+    .step-container {
+        padding: 0 15px;
+        margin-top: 40px;
+    }
+    
+    .progress-step .card-body,
+    .progress-step {
+        padding: 30px !important;
+    }
+    
+    .btn-gsr-accent {
+        box-shadow: 0 4px 16px rgba(39, 145, 52, 0.3) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .btn-gsr-accent:hover {
+        box-shadow: 0 6px 20px rgba(39, 145, 52, 0.4) !important;
+        transform: translateY(-1px) !important;
+    }
+    
+    .gsr-logo {
+        height: 90px !important;
+        width: 90px !important;
+        border-radius: 50% !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        padding: 18px !important;
+        box-shadow: 0 6px 20px rgba(255, 255, 255, 0.25) !important;
+        transition: all 0.3s ease !important;
+        border: 2px solid rgba(255, 255, 255, 0.3) !important;
+        object-fit: contain !important;
+    }
+    
+    .gsr-logo:hover {
+        transform: scale(1.08) !important;
+        box-shadow: 0 8px 25px rgba(255, 255, 255, 0.4) !important;
+        border-color: rgba(255, 255, 255, 0.5) !important;
+    }
+    
+    .gsr-logo {
+        animation: logoGlow 2s ease-in-out infinite alternate !important;
+    }
+    
+    @keyframes logoGlow {
+        0% { box-shadow: 0 6px 20px rgba(255, 255, 255, 0.25); }
+        100% { box-shadow: 0 8px 25px rgba(255, 255, 255, 0.35); }
+    }
+    
+    .progress-step.step-disabled {
+        display: none !important;
+    }
+    
+    .progress-step.step-active {
+        display: block !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Зеленая плашка с логотипом GSR -->
+<div class="row">
+    <div class="col-12">
+        <div class="card-gsr">
+            <div class="card-body text-center gsr-bg-gradient text-white" style="border-radius: 16px 16px 0 0;">
+                <img src="/static/7411193.png" alt="GSR" class="gsr-logo mb-3">
+                <h1 class="gsr-heading mb-2">
+                    <i class="fas fa-briefcase me-2"></i>Модуль Вакансий
+                </h1>
+                <p class="mb-0 fs-5">Создание привлекательного видео-контента для вакансий</p>
+                <a href="{{ url_for('settings_page', module_name='vacancies') }}" class="btn btn-outline-light btn-lg mt-3">
+                    <i class="fas fa-cog me-2"></i>Настройки
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ШАГ 1: Загрузка вакансий -->
+<div class="row step-container">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-active" id="step1">
+            <div class="d-flex align-items-center mb-4">
+                <div class="step-number-gsr">1</div>
+                <div>
+                    <h4 class="gsr-heading mb-1 gsr-text-primary">Загрузка вакансий</h4>
+                    <p class="text-muted mb-0">Парсинг данных из Google Sheets</p>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label for="sheetUrl" class="form-label fw-bold gsr-text-secondary">
+                    <i class="fas fa-link me-2"></i>URL Google Sheets
+                </label>
+                <input type="url" class="form-control form-control-lg" id="sheetUrl" 
+                       placeholder="https://docs.google.com/spreadsheets/d/..."
+                       value="https://docs.google.com/spreadsheets/u/1/d/1I1AfpmNbd-K0Osd4Vh7npDCYSQr2a1t_KdT8ms9vgr4/edit?gid=718924971#gid=718924971"
+                       style="border: 2px solid rgba(0, 64, 39, 0.2); border-radius: 12px;">
+            </div>
+            
+            <div class="mb-4">
+                <label for="csvFile" class="form-label fw-bold gsr-text-secondary">
+                    <i class="fas fa-file-csv me-2"></i>Или загрузите CSV файл
+                </label>
+                <input type="file" class="form-control form-control-lg" id="csvFile" accept=".csv"
+                       style="border: 2px solid rgba(0, 64, 39, 0.2); border-radius: 12px;">
+            </div>
+            
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-gsr-accent btn-lg" onclick="loadVacancies()">
+                    <i class="fas fa-download me-2"></i>Загрузить вакансии
+                </button>
+                <button class="btn btn-success btn-lg" onclick="loadCsv()">
+                    <i class="fas fa-upload me-2"></i>Загрузить CSV
+                </button>
+                <button class="btn btn-outline-primary btn-lg" onclick="loadTestData()">
+                    <i class="fas fa-flask me-2"></i>Тестовые данные
+                </button>
+            </div>
+            
+            <div id="parseStatus" class="mt-3"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ШАГ 2: Выбор вакансии -->
+<div class="row step-container">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-disabled" id="step2">
+            <div class="d-flex align-items-center mb-4">
+                <div class="step-number-gsr">2</div>
+                <div>
+                    <h4 class="gsr-heading mb-1 gsr-text-primary">Выбор вакансии</h4>
+                    <p class="text-muted mb-0">Выберите вакансию для создания видео</p>
+                </div>
+            </div>
+            
+            <div id="vacanciesList" class="row g-3">
+                <div class="col-12 text-center text-muted p-4">
+                    <i class="fas fa-info-circle fa-2x mb-2"></i>
+                    <div>Сначала загрузите вакансии</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ШАГ 3: Редактирование текста -->
+<div class="row step-container">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-disabled" id="step3">
+            <div class="d-flex align-items-center mb-4">
+                <div class="step-number-gsr">3</div>
+                <div>
+                    <h4 class="gsr-heading mb-1 gsr-text-primary">Редактирование текста</h4>
+                    <p class="text-muted mb-0">Отредактируйте сгенерированный текст при необходимости</p>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="videoText" class="form-label fw-bold gsr-text-secondary">
+                    <i class="fas fa-edit me-2"></i>Текст для видео (40-60 секунд)
+                </label>
+                <textarea class="form-control" id="videoText" rows="8" 
+                          placeholder="Здесь появится сгенерированный текст для редактирования..."
+                          style="border: 2px solid rgba(0, 64, 39, 0.2); border-radius: 12px;"></textarea>
+            </div>
+            
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-gsr-accent btn-lg" onclick="generateText()">
+                    <i class="fas fa-magic me-2"></i>Сгенерировать текст
+                </button>
+                <button class="btn btn-success btn-lg" onclick="generateAudio()">
+                    <i class="fas fa-volume-up me-2"></i>Сгенерировать аудио
+                </button>
+                <button class="btn btn-primary btn-lg" onclick="generateVideo()">
+                    <i class="fas fa-video me-2"></i>Сгенерировать видео
+                </button>
+            </div>
+            
+            <div id="textStatus" class="mt-3"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+console.log('🚀 Модуль вакансий загружен');
+
+// Функция отображения статуса
+function showStatus(message, type) {
+    const status = document.getElementById('parseStatus');
+    const alertClass = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-danger' : 'alert-info';
+    status.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+}
+
+// Загрузка вакансий из Google Sheets
+function loadVacancies() {
+    console.log('🔄 Загружаем вакансии из Google Sheets...');
+    const url = document.getElementById('sheetUrl').value;
+    if (!url) {
+        alert('Введите URL Google Sheets');
+        return;
+    }
+    
+    showStatus('Загружаем вакансии...', 'info');
+    
+    fetch('/api/vacancies/parse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showStatus(`✅ Загружено ${data.count} вакансий`, 'success');
+            displayVacancies(data.vacancies);
+        } else {
+            showStatus('❌ Ошибка: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Ошибка:', error);
+        showStatus('❌ Ошибка: ' + error.message, 'error');
+    });
+}
+
+// Загрузка CSV файла
+function loadCsv() {
+    console.log('🔄 Загружаем CSV файл...');
+    const fileInput = document.getElementById('csvFile');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('Выберите CSV файл');
+        return;
+    }
+    
+    showStatus('Загружаем CSV...', 'info');
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/api/vacancies/upload-csv', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showStatus(`✅ Загружено ${data.count} вакансий из CSV`, 'success');
+            displayVacancies(data.vacancies);
+        } else {
+            showStatus('❌ Ошибка: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Ошибка:', error);
+        showStatus('❌ Ошибка: ' + error.message, 'error');
+    });
+}
+
+// Загрузка тестовых данных
+function loadTestData() {
+    console.log('🔄 Загружаем тестовые данные...');
+    showStatus('Загружаем тестовые данные...', 'info');
+    
+    fetch('/api/vacancies/test')
+    .then(response => response.json())
+    .then(data => {
+        console.log('📊 Получены данные:', data);
+        if (data.success) {
+            showStatus(`✅ Загружено ${data.count} тестовых вакансий`, 'success');
+            displayVacancies(data.vacancies);
+        } else {
+            showStatus('❌ Ошибка: ' + (data.error || 'Неизвестная ошибка'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Ошибка загрузки:', error);
+        showStatus('❌ Ошибка: ' + error.message, 'error');
+    });
+}
+
+// Отображение списка вакансий
+function displayVacancies(vacancies) {
+    console.log('📋 Отображаем вакансии:', vacancies);
+    
+    const container = document.getElementById('vacanciesList');
+    container.innerHTML = '';
+    
+    vacancies.forEach((vacancy, index) => {
+        const card = document.createElement('div');
+        card.className = 'col-md-6';
+        card.innerHTML = `
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title gsr-text-primary">${vacancy.position}</h5>
+                    <p class="card-text"><strong>Компания:</strong> ${vacancy.company}</p>
+                    <p class="card-text"><strong>Локация:</strong> ${vacancy.location}</p>
+                    <p class="card-text"><strong>Зарплата:</strong> ${vacancy.salary}</p>
+                    <button class="btn btn-gsr-accent" onclick="selectVacancy(${index})">
+                        <i class="fas fa-check me-2"></i>Выбрать
+                    </button>
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+    
+    // АКТИВИРУЕМ ШАГ 2
+    console.log('✅ Активируем шаг 2');
+    const step2 = document.getElementById('step2');
+    step2.classList.remove('step-disabled');
+    step2.classList.add('step-active');
+    
+    // Плавный скролл к шагу 2
+    setTimeout(() => {
+        step2.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
+    
+    // Сохраняем вакансии в глобальную переменную
+    window.currentVacancies = vacancies;
+}
+
+// Выбор вакансии
+function selectVacancy(index) {
+    console.log('✅ Выбрана вакансия:', index);
+    const vacancy = window.currentVacancies[index];
+    
+    // Заполняем текст для видео
+    document.getElementById('videoText').value = `Вакансия: ${vacancy.position}\nКомпания: ${vacancy.company}\nЛокация: ${vacancy.location}\nЗарплата: ${vacancy.salary}`;
+    
+    // АКТИВИРУЕМ ШАГ 3
+    console.log('✅ Активируем шаг 3');
+    const step3 = document.getElementById('step3');
+    step3.classList.remove('step-disabled');
+    step3.classList.add('step-active');
+    
+    // Плавный скролл к шагу 3
+    setTimeout(() => {
+        step3.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
+    
+    showStatus('✅ Вакансия выбрана', 'success');
+    
+    // Сохраняем выбранную вакансию
+    window.selectedVacancy = vacancy;
+}
+
+// Генерация текста
+function generateText() {
+    console.log('🔄 Генерируем текст...');
+    
+    if (!window.selectedVacancy) {
+        alert('Сначала выберите вакансию');
+        return;
+    }
+    
+    const textStatus = document.getElementById('textStatus');
+    textStatus.innerHTML = '<div class="alert alert-info">Генерируем текст с помощью ИИ...</div>';
+    
+    fetch('/api/vacancies/generate-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vacancy: window.selectedVacancy })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('videoText').value = data.text;
+            textStatus.innerHTML = '<div class="alert alert-success">✅ Текст сгенерирован</div>';
+        } else {
+            textStatus.innerHTML = '<div class="alert alert-danger">❌ Ошибка: ' + data.error + '</div>';
+        }
+    })
+    .catch(error => {
+        console.error('❌ Ошибка:', error);
+        textStatus.innerHTML = '<div class="alert alert-danger">❌ Ошибка: ' + error.message + '</div>';
+    });
+}
+
+// Генерация аудио
+function generateAudio() {
+    console.log('🔄 Генерируем аудио...');
+    const textStatus = document.getElementById('textStatus');
+    textStatus.innerHTML = '<div class="alert alert-info">Генерируем аудио с помощью ElevenLabs...</div>';
+    // TODO: Реализовать API вызов
+}
+
+// Генерация видео
+function generateVideo() {
+    console.log('🔄 Генерируем видео...');
+    const textStatus = document.getElementById('textStatus');
+    textStatus.innerHTML = '<div class="alert alert-info">Генерируем видео с помощью HeyGen...</div>';
+    // TODO: Реализовать API вызов
+}
+</script>
+{% endblock %}

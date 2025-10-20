@@ -1,0 +1,1111 @@
+{% extends "base.html" %}
+
+{% block title %}Модуль Трендвотчинга - Контент Завод{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card-gsr">
+            <div class="card-body text-center gsr-bg-gradient text-white" style="border-radius: 16px 16px 0 0;">
+                <img src="/static/7411193.png" alt="GSR" class="gsr-logo mb-3">
+                <h1 class="gsr-heading mb-2">
+                    <i class="fas fa-chart-line me-2"></i>Модуль Трендвотчинга
+                </h1>
+                <p class="mb-0 fs-5">Анализ трендов и создание вирусного контента на основе данных конкурентов</p>
+                <a href="{{ url_for('settings_page', module_name='trends') }}" class="btn btn-outline-light btn-lg mt-3">
+                    <i class="fas fa-cog me-2"></i>Настройки API
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card-gsr progress-step module-status-card" id="statusInfo">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-key text-success me-2"></i>
+                        <div>
+                            <div class="fw-semibold text-muted">Apify ключ</div>
+                            <div id="apifyStatus" class="fw-bold">проверяется…</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-users text-primary me-2"></i>
+                        <div>
+                            <div class="fw-semibold text-muted">Выбранные конкуренты</div>
+                            <div class="fw-bold"><span id="competitorsCount">0</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-active" id="step1">
+            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-4">
+                <div class="d-flex align-items-center mb-3 mb-md-0">
+                    <div class="step-number-gsr">1</div>
+                    <div>
+                        <h4 class="gsr-heading mb-1 gsr-text-primary">Сбор рилсов</h4>
+                        <p class="text-muted mb-0">Укажите конкурентов и лимит, чтобы собрать свежие рилсы</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <label class="form-label fw-semibold gsr-text-secondary">
+                        <i class="fas fa-hashtag me-2"></i>Количество рилсов на конкурента
+                    </label>
+                    <select class="form-select form-select-lg" id="reelsCount">
+                        <option value="10">10</option>
+                        <option value="20" selected>20</option>
+                        <option value="30">30</option>
+                        <option value="50">50</option>
+                    </select>
+                    <small class="text-muted">Можно отметить сразу нескольких конкурентов.</small>
+                </div>
+                <div class="col-lg-8">
+                    <label class="form-label fw-semibold gsr-text-secondary">
+                        <i class="fas fa-users me-2"></i>Конкуренты для анализа
+                    </label>
+                    <div id="competitorsList" class="p-3 border rounded bg-light" style="max-height: 220px; overflow-y: auto;">
+                        <div class="text-center text-muted">
+                            <div class="spinner-border spinner-border-sm" role="status"></div>
+                            <div class="mt-2">Загружаем конкурентов…</div>
+                        </div>
+                    </div>
+                    <div class="form-text mt-2">
+                        <a href="{{ url_for('settings_page', module_name='trends') }}" class="link-success">Перейти в настройки и добавить конкурентов</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex flex-column flex-md-row gap-3 mt-4">
+                <button class="btn btn-gsr-accent btn-lg flex-fill" id="collectButton" onclick="collectReels(event)">
+                    <i class="fas fa-cloud-download-alt me-2"></i>Собрать рилсы конкурентов
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-disabled" id="step2">
+            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-4">
+                <div class="d-flex align-items-center mb-3 mb-md-0">
+                    <div class="step-number-gsr">2</div>
+                    <div>
+                        <h4 class="gsr-heading mb-1 gsr-text-primary">Отбор рилсов</h4>
+                        <p class="text-muted mb-0">Анализируйте метрики и выбирайте лучший контент</p>
+                    </div>
+                </div>
+                <div class="bg-light rounded px-3 py-2 text-muted small">
+                    <div><strong>Всего:</strong> <span id="totalReels">0</span></div>
+                    <div><strong>Виральных (&gt;30k):</strong> <span id="viralReels">0</span></div>
+                </div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <div class="btn-group">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="sortReels('views')">
+                        <i class="fas fa-sort-amount-down me-1"></i>По просмотрам
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="sortReels('likes')">
+                        <i class="fas fa-heart me-1"></i>По лайкам
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="sortReels('date')">
+                        <i class="fas fa-calendar-day me-1"></i>По дате
+                    </button>
+                </div>
+                <div class="ms-auto">
+                    <button class="btn btn-outline-primary btn-sm" onclick="exportReels()">
+                        <i class="fas fa-file-export me-1"></i>Выгрузить CSV
+                    </button>
+                </div>
+            </div>
+
+            <div class="row" id="reelsList"></div>
+            <div class="text-center text-muted" id="emptyState" style="display:block;">
+                <i class="fas fa-search fa-2x mb-2"></i>
+                <p class="mb-0">Рилсы не найдены. Попробуйте других конкурентов или увеличьте лимит.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Шаг 3: Транскрибация -->
+<div class="row">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-disabled" id="step3">
+            <div class="d-flex align-items-center mb-4">
+                <div class="step-number-gsr">3</div>
+                <div>
+                    <h4 class="gsr-heading mb-1 gsr-text-primary">Транскрибация</h4>
+                    <p class="text-muted mb-0">AssemblyAI преобразует аудио в текст</p>
+                </div>
+            </div>
+            
+            <div id="selectedReelInfo" class="mb-4" style="display: none;">
+                <!-- Информация о выбранном рилсе будет здесь -->
+            </div>
+            
+            <button class="btn btn-gsr-accent btn-lg" onclick="transcribeReel()" id="transcribeBtn">
+                <i class="fas fa-microphone me-2"></i>Транскрибировать
+            </button>
+            
+            <div id="transcriptionResult" class="mt-4" style="display: none;">
+                <label class="form-label gsr-text-primary">
+                    <i class="fas fa-file-text me-2"></i>Текст транскрипции
+                </label>
+                <textarea class="form-control text-editor" id="transcriptionText" rows="6" 
+                          placeholder="Здесь появится транскрибированный текст..."></textarea>
+                <div class="form-text">
+                    <i class="fas fa-info-circle gsr-text-accent me-1"></i>
+                    Проверьте текст и при необходимости отредактируйте его
+                </div>
+            </div>
+            
+            <div id="transcriptionStatus"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Шаг 4: Переписывание текста -->
+<div class="row">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-disabled" id="step4">
+            <div class="d-flex align-items-center mb-4">
+                <div class="step-number-gsr">4</div>
+                <div>
+                    <h4 class="gsr-heading mb-1 gsr-text-primary">Переписывание текста</h4>
+                    <p class="text-muted mb-0">OpenAI переписывает текст для вашей аудитории</p>
+                </div>
+            </div>
+            
+            <button class="btn btn-gsr-accent btn-lg" onclick="rewriteText()" id="rewriteBtn" disabled>
+                <i class="fas fa-magic me-2"></i>Переписать текст
+            </button>
+            
+            <div id="rewriteResult" class="mt-4" style="display: none;">
+                <label class="form-label gsr-text-primary">
+                    <i class="fas fa-edit me-2"></i>Переписанный текст
+                </label>
+                <textarea class="form-control text-editor" id="rewrittenText" rows="6" 
+                          placeholder="Здесь появится переписанный текст..."></textarea>
+                <div class="form-text">
+                    <i class="fas fa-info-circle gsr-text-accent me-1"></i>
+                    Отредактируйте текст при необходимости перед созданием аудио
+                </div>
+            </div>
+            
+            <div id="rewriteStatus"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Шаг 5: Генерация аудио -->
+<div class="row">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-disabled" id="step5">
+            <div class="d-flex align-items-center mb-4">
+                <div class="step-number-gsr">5</div>
+                <div>
+                    <h4 class="gsr-heading mb-1 gsr-text-primary">Аудиодорожка</h4>
+                    <p class="text-muted mb-0">ElevenLabs создает естественную речь</p>
+                </div>
+            </div>
+            
+            <!-- Настройки аудио -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <label class="form-label gsr-text-primary">
+                        <i class="fas fa-robot me-2"></i>Модель ElevenLabs
+                    </label>
+                    <select class="form-select" id="audioModelId">
+                        <option value="eleven_multilingual_v2">Eleven Multilingual v2 (Рекомендуется)</option>
+                        <option value="eleven_flash_v2_5">Eleven Flash v2.5 (Быстрая)</option>
+                        <option value="eleven_turbo_v2_5">Eleven Turbo v2.5 (Сбалансированная)</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label gsr-text-primary">
+                        <i class="fas fa-microphone me-2"></i>Голос
+                    </label>
+                    <select class="form-select" id="audioVoiceId">
+                        <option value="">Выберите голос…</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label gsr-text-primary">
+                        <i class="fas fa-file-text me-2"></i>Текст для озвучки
+                    </label>
+                    <textarea class="form-control" id="audioText" rows="3" placeholder="Введите текст для озвучки..."></textarea>
+                </div>
+            </div>
+            
+            <button class="btn btn-gsr-accent btn-lg" onclick="generateAudio()" id="audioBtn" disabled>
+                <i class="fas fa-microphone me-2"></i>Создать аудио
+            </button>
+            
+            <div id="audioPlayer" class="mt-4"></div>
+            <div id="audioStatus"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Шаг 6: Генерация видео -->
+<div class="row">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-disabled" id="step6">
+            <div class="d-flex align-items-center mb-4">
+                <div class="step-number-gsr">6</div>
+                <div>
+                    <h4 class="gsr-heading mb-1 gsr-text-primary">Готовое видео</h4>
+                    <p class="text-muted mb-0">HeyGen создает говорящую голову</p>
+                </div>
+            </div>
+            
+            <!-- Настройки видео -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label class="form-label gsr-text-primary">
+                        <i class="fas fa-user me-2"></i>Аватар
+                    </label>
+                    <select class="form-select" id="avatarSelect">
+                        <option value="">Выберите аватар…</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label gsr-text-primary">
+                        <i class="fas fa-video me-2"></i>Формат видео
+                    </label>
+                    <select class="form-select" id="videoFormat">
+                        <option value="vertical">Вертикальное (9:16)</option>
+                        <option value="horizontal">Горизонтальное (16:9)</option>
+                        <option value="square">Квадратное (1:1)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button class="btn btn-gsr-accent btn-lg" onclick="generateFinalVideo()" id="videoBtn" disabled>
+                <i class="fas fa-video me-2"></i>Создать видео
+            </button>
+            
+            <div id="videoPlayer" class="mt-4"></div>
+            <div id="videoStatus"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Финальный результат -->
+<div class="card-gsr progress-step step-disabled d-none" id="finalResult">
+    <div class="d-flex align-items-center mb-4">
+        <div class="step-number-gsr">7</div>
+        <div>
+            <h4 class="gsr-heading mb-1 gsr-text-primary">Готовый результат</h4>
+            <p class="text-muted mb-0">Скачайте финальный контент для публикации</p>
+        </div>
+    </div>
+    <div id="finalVideoResult"></div>
+</div>
+
+<!-- Системный лог -->
+<div class="card-gsr mt-4">
+    <div class="card-body">
+        <h6 class="mb-0"><i class="fas fa-terminal me-2"></i>Логи действий</h6>
+    </div>
+    <div class="card-body" style="max-height: 200px; overflow-y: auto;" id="logArea">
+        <div class="text-muted">Логи появятся здесь…</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let selectedReel = null;
+let transcriptText = '';
+let rewrittenText = '';
+let lastLoadedReels = [];
+let currentAudioUrl = '';
+let currentVideoUrl = '';
+
+function log(message, type = 'info') {
+    const container = document.getElementById('logArea');
+    const line = document.createElement('div');
+    const time = new Date().toLocaleTimeString();
+    const colors = { info: 'text-muted', success: 'text-success', error: 'text-danger' };
+    line.className = colors[type] || 'text-muted';
+    line.textContent = `[${time}] ${message}`;
+    container.prepend(line);
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await Promise.all([loadCompetitors(), loadVoicesAndAvatars(), checkApifyStatus()]);
+});
+
+async function checkApifyStatus() {
+    try {
+        const response = await fetch('/api/settings/trends');
+        if (!response.ok) throw new Error('settings response not ok');
+        const data = await response.json();
+        const apifyKey = data?.api_keys?.apify_api_key;
+        document.getElementById('apifyStatus').innerHTML = apifyKey ? `<span class="text-success">найден</span>` : `<span class="text-danger">не настроен</span>`;
+    } catch (err) {
+        log(`Не удалось проверить Apify ключ: ${err.message}`, 'error');
+        document.getElementById('apifyStatus').innerHTML = `<span class="text-danger">ошибка проверки</span>`;
+    }
+}
+
+async function loadCompetitors() {
+    try {
+        const response = await fetch('/api/competitors');
+        const competitors = await response.json();
+        const container = document.getElementById('competitorsList');
+
+        if (!Array.isArray(competitors) || competitors.length === 0) {
+            container.innerHTML = `<div class="text-center text-muted">Конкуренты не добавлены. <a href="/settings/trends">Перейти в настройки</a></div>`;
+            document.getElementById('competitorsCount').textContent = '0';
+            return;
+        }
+
+        container.innerHTML = competitors.map((comp, index) => `
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" value="${comp.username}" id="comp_${comp.id}" ${index === 0 ? 'checked' : ''}>
+                <label class="form-check-label" for="comp_${comp.id}">
+                    <strong>@${comp.username}</strong>
+                    <span class="text-muted">(${comp.platform})</span>
+                </label>
+            </div>
+        `).join('');
+        document.getElementById('competitorsCount').textContent = competitors.length;
+    } catch (error) {
+        log(`Ошибка загрузки конкурентов: ${error.message}`, 'error');
+    }
+}
+
+async function loadVoicesAndAvatars() {
+    try {
+        const [voicesResponse, avatarsResponse] = await Promise.all([
+            fetch('/api/elevenlabs/voices'),
+            fetch('/api/heygen/avatars')
+        ]);
+
+        const audioVoiceSelect = document.getElementById('audioVoiceId');
+        const avatarSelect = document.getElementById('avatarSelect');
+
+        if (voicesResponse.ok) {
+            const voices = await voicesResponse.json();
+            if (!voices.error && voices.voices) {
+                voices.voices.forEach(voice => {
+                    const option = document.createElement('option');
+                    option.value = voice.voice_id;
+                    option.textContent = voice.name;
+                    audioVoiceSelect.appendChild(option);
+                });
+            }
+        }
+
+        if (avatarsResponse.ok) {
+            const avatars = await avatarsResponse.json();
+            if (!avatars.error && avatars.avatars) {
+                avatars.avatars.forEach(avatar => {
+                    const option = document.createElement('option');
+                    option.value = avatar.avatar_id;
+                    option.textContent = avatar.avatar_name;
+                    avatarSelect.appendChild(option);
+                });
+            }
+        }
+    } catch (error) {
+        log(`Ошибка загрузки голосов/аватаров: ${error.message}`, 'error');
+    }
+}
+
+async function collectReels(event) {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Собираю…';
+
+    try {
+        const selectedCompetitors = Array.from(document.querySelectorAll('#competitorsList input:checked')).map(el => el.value);
+        if (selectedCompetitors.length === 0) {
+            window.alert('Выберите хотя бы одного конкурента');
+            return;
+        }
+
+        const reelsCount = parseInt(document.getElementById('reelsCount').value, 10);
+        log(`Запрос к Apify: ${selectedCompetitors.join(', ')} (по ${reelsCount})`);
+
+        const response = await fetch('/api/trends/collect-reels?v=' + Date.now(), {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            },
+            body: JSON.stringify({
+                competitors: selectedCompetitors,
+                count: reelsCount
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            throw new Error(`Ожидался JSON, получен: ${contentType}. Ответ: ${text.substring(0, 100)}...`);
+        }
+        
+        const result = await response.json();
+
+        if (!result.success) {
+            log(`Apify ответил ошибкой: ${result.message}`, 'error');
+            window.alert(`Ошибка: ${result.message}`);
+            return;
+        }
+
+        if (!result.reels || result.reels.length === 0) {
+            log('Apify вернул 0 постов', 'error');
+            window.alert('Apify не вернул данные. Проверьте ключ/аккаунты.');
+            return;
+        }
+
+        lastLoadedReels = result.reels;
+        GSRPipeline.enableStep('step2');
+        GSRPipeline.activateStep('step2', { exclusive: true });
+        displayReels(result.reels);
+        document.getElementById('step2').scrollIntoView({ behavior: 'smooth' });
+        log(`Получено ${result.reels.length} постов. Виральных: ${result.viral_count}`, 'success');
+    } catch (error) {
+        log(`Ошибка сети: ${error.message}`, 'error');
+        window.alert(`Ошибка сети: ${error.message}`);
+    } finally {
+        button.disabled = false;
+        button.innerHTML = originalText;
+    }
+}
+
+function displayReels(reels) {
+    const container = document.getElementById('reelsList');
+    const viralReels = reels.filter(r => r.is_viral || (r.views_count || 0) > 30000);
+
+    document.getElementById('totalReels').textContent = reels.length;
+    document.getElementById('viralReels').textContent = viralReels.length;
+    document.getElementById('emptyState').style.display = reels.length === 0 ? 'block' : 'none';
+
+    container.innerHTML = reels.map((reel, index) => {
+        const caption = (reel.caption || '').slice(0, 140);
+        const hashtags = (reel.hashtags || []).slice(0, 4).map(tag => `#${tag}`).join(' ');
+        const firstComment = reel.first_comment ? reel.first_comment.slice(0, 80) : '';
+        const music = reel.music ? `<div class="small text-muted"><i class="fas fa-music me-1"></i>${reel.music}</div>` : '';
+        const thumbnail = reel.thumbnail_url ? `<img src="${reel.thumbnail_url}" class="img-fluid rounded mb-2" alt="preview">` : '';
+        return `
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100 reel-card ${reel.is_viral || (reel.views_count || 0) > 30000 ? 'border-success' : 'border-secondary'}"
+                 data-reel-id="${reel.id}" onclick="selectReel('${reel.id}', '${reel.video_url}', ${index})">
+                <div class="card-body">
+                    ${thumbnail}
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="mb-0">@${reel.source_username || 'unknown'}</h6>
+                        <small class="text-muted">${reel.timestamp ? new Date(reel.timestamp).toLocaleDateString() : '-'}</small>
+                    </div>
+                    <p class="small">${caption || 'Описание отсутствует'}</p>
+                    ${hashtags ? `<div class="small text-muted mb-2">${hashtags}</div>` : ''}
+                    ${firstComment ? `<div class="alert alert-light p-2 small border"><i class="far fa-comment-dots me-1"></i>${firstComment}</div>` : ''}
+                    ${music}
+                    <div class="row text-center mt-2">
+                        <div class="col"><strong>${(reel.views_count || 0).toLocaleString()}</strong><div class="text-muted small">👁 Просмотры</div></div>
+                        <div class="col"><strong>${(reel.likes_count || 0).toLocaleString()}</strong><div class="text-muted small">❤️ Лайки</div></div>
+                        <div class="col"><strong>${(reel.comments_count || 0).toLocaleString()}</strong><div class="text-muted small">💬 Комменты</div></div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-top-0">
+                    <div class="d-grid gap-2">
+                        <a class="btn btn-outline-secondary btn-sm" href="${reel.url}" target="_blank" onclick="event.stopPropagation();">
+                            <i class="fas fa-external-link-alt me-1"></i>Открыть в Instagram
+                        </a>
+                        <button class="btn btn-outline-primary btn-sm" onclick="event.stopPropagation(); openVideoPreview('${reel.video_url}', '${(reel.source_username || '').replace(/'/g, "&apos;")}', '${(caption || '').replace(/'/g, "&apos;")}', ${index})">
+                            <i class="fas fa-play me-1"></i>Предпросмотр
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function selectReel(reelId, videoUrl, index) {
+    document.querySelectorAll('.reel-card').forEach(card => card.classList.remove('border-warning'));
+    const card = document.querySelector(`[data-reel-id="${reelId}"]`);
+    if (card) card.classList.add('border-warning');
+
+    selectedReel = { id: reelId, video_url: videoUrl, index };
+    const reelData = lastLoadedReels[index];
+
+    document.getElementById('selectedReelInfo').innerHTML = `
+        <div class="small text-muted">Источник: @${reelData?.source_username || 'unknown'}</div>
+        <div class="fw-bold mb-2">${reelData?.caption || 'Без описания'}</div>
+        <div class="d-flex justify-content-between">
+            <span>👁 ${(reelData?.views_count || 0).toLocaleString()}</span>
+            <span>❤️ ${(reelData?.likes_count || 0).toLocaleString()}</span>
+            <span>💬 ${(reelData?.comments_count || 0).toLocaleString()}</span>
+        </div>
+        <hr>
+        <div class="small text-muted">ID: ${reelId}</div>
+        <div class="small text-muted">Видео: ${videoUrl ? '<a href="' + videoUrl + '" target="_blank">ссылка</a>' : 'нет прямой ссылки'}</div>
+    `;
+    
+    document.getElementById('selectedReelInfo').style.display = 'block';
+    GSRPipeline.enableStep('step3');
+    GSRPipeline.activateStep('step3', { exclusive: true });
+    document.getElementById('step3').scrollIntoView({ behavior: 'smooth' });
+}
+
+
+
+function proceedToRewrite() {
+    const modal = document.querySelector('.modal');
+    if (modal) {
+        const instance = bootstrap.Modal.getInstance(modal);
+        if (instance) instance.hide();
+    }
+    const transcriptTextArea = document.getElementById('transcriptTextArea');
+    if (transcriptTextArea) {
+        transcriptText = transcriptTextArea.value;
+        const transcriptField = document.getElementById('transcriptionText');
+        if (transcriptField) transcriptField.value = transcriptText;
+    }
+    GSRPipeline.enableStep('step4');
+    GSRPipeline.activateStep('step4', { exclusive: true });
+    const step = document.getElementById('step4');
+    if (step) step.scrollIntoView({ behavior: 'smooth' });
+}
+
+
+
+
+
+function proceedToAudio() {
+    const modal = document.querySelector('.modal');
+    if (modal) {
+        const instance = bootstrap.Modal.getInstance(modal);
+        if (instance) instance.hide();
+    }
+    const rewrittenTextArea = document.getElementById('rewrittenTextArea');
+    if (rewrittenTextArea) {
+        rewrittenText = rewrittenTextArea.value;
+        const rewriteField = document.getElementById('rewrittenText');
+        if (rewriteField) rewriteField.value = rewrittenText;
+    }
+    GSRPipeline.enableStep('step5');
+    GSRPipeline.activateStep('step5', { exclusive: true });
+    const step = document.getElementById('step5');
+    if (step) step.scrollIntoView({ behavior: 'smooth' });
+}
+
+
+
+
+
+
+
+
+
+async function transcribeReel() {
+    if (!selectedReel) {
+        alert('Выберите рилс для транскрибации');
+        return;
+    }
+
+    GSRPipeline.showStatus('transcriptionStatus', 'processing', 'Транскрибация в процессе...');
+    
+    try {
+        const response = await fetch('/api/trends/transcribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                reel_id: selectedReel.id,
+                video_url: selectedReel.video_url 
+            })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            transcriptText = result.transcript;
+            document.getElementById('transcriptionText').value = transcriptText;
+            document.getElementById('transcriptionResult').style.display = 'block';
+            document.getElementById('rewriteBtn').disabled = false;
+            GSRPipeline.enableStep('step4');
+            GSRPipeline.activateStep('step4', { exclusive: true });
+            GSRPipeline.showStatus('transcriptionStatus', 'completed', '✅ Транскрибация завершена!');
+            log(`Транскрибация завершена. Текст: ${transcriptText.substring(0, 50)}...`, 'success');
+        } else {
+            GSRPipeline.showStatus('transcriptionStatus', 'error', '❌ ' + result.message);
+            log(`Ошибка транскрибации: ${result.message}`, 'error');
+        }
+    } catch (error) {
+        GSRPipeline.showStatus('transcriptionStatus', 'error', '❌ ' + error.message);
+        log(`Ошибка транскрибации: ${error.message}`, 'error');
+    }
+}
+
+async function rewriteText() {
+    if (!transcriptText) {
+        alert('Сначала выполните транскрибацию');
+        return;
+    }
+
+    GSRPipeline.showStatus('rewriteStatus', 'processing', 'Переписывание текста...');
+    
+    try {
+        const response = await fetch('/api/trends/rewrite', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transcript: transcriptText })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            rewrittenText = result.rewritten_text;
+            document.getElementById('rewrittenText').value = rewrittenText;
+            document.getElementById('rewriteResult').style.display = 'block';
+            document.getElementById('audioBtn').disabled = false;
+            GSRPipeline.enableStep('step5');
+            GSRPipeline.activateStep('step5', { exclusive: true });
+            GSRPipeline.showStatus('rewriteStatus', 'completed', '✅ Текст переписан!');
+            log(`Переписывание завершено. Новый текст: ${rewrittenText.substring(0, 50)}...`, 'success');
+        } else {
+            GSRPipeline.showStatus('rewriteStatus', 'error', '❌ ' + result.message);
+            log(`Ошибка переписывания: ${result.message}`, 'error');
+        }
+    } catch (error) {
+        GSRPipeline.showStatus('rewriteStatus', 'error', '❌ ' + error.message);
+        log(`Ошибка переписывания: ${error.message}`, 'error');
+    }
+}
+
+async function generateAudio() {
+    const voiceId = document.getElementById('audioVoiceId').value;
+    const modelId = document.getElementById('audioModelId').value;
+    const text = document.getElementById('audioText').value || rewrittenText;
+
+    if (!voiceId) {
+        alert('Выберите голос');
+        return;
+    }
+
+    if (!text.trim()) {
+        alert('Введите текст для озвучки');
+        return;
+    }
+
+    GSRPipeline.showStatus('audioStatus', 'processing', 'Создание аудио...');
+    
+    try {
+        const response = await fetch('/api/trends/generate-audio', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                text: text,
+                voice_id: voiceId,
+                model_id: modelId
+            })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            currentAudioUrl = result.audio_url;
+            document.getElementById('audioPlayer').innerHTML = `
+                <div class="mb-3">
+                    <audio controls class="audio-player w-100 mb-3" style="border-radius: 12px;">
+                        <source src="${result.audio_url}" type="audio/mpeg">
+                        Ваш браузер не поддерживает аудио элемент.
+                    </audio>
+                    <div class="text-center">
+                        <a href="${result.audio_url}" download class="btn btn-gsr-accent btn-sm">
+                            <i class="fas fa-download me-2"></i>Скачать аудио
+                        </a>
+                    </div>
+                </div>
+            `;
+            document.getElementById('videoBtn').disabled = false;
+            GSRPipeline.enableStep('step6');
+            GSRPipeline.activateStep('step6', { exclusive: true });
+            GSRPipeline.showStatus('audioStatus', 'completed', '✅ Аудио создано!');
+            log(`Аудио создано успешно`, 'success');
+        } else {
+            GSRPipeline.showStatus('audioStatus', 'error', '❌ ' + result.message);
+            log(`Ошибка создания аудио: ${result.message}`, 'error');
+        }
+    } catch (error) {
+        GSRPipeline.showStatus('audioStatus', 'error', '❌ ' + error.message);
+        log(`Ошибка создания аудио: ${error.message}`, 'error');
+    }
+}
+
+async function generateFinalVideo() {
+    const avatarId = document.getElementById('avatarSelect').value;
+    const videoFormat = document.getElementById('videoFormat').value;
+    const text = document.getElementById('rewrittenText').value || rewrittenText;
+
+    if (!avatarId) {
+        alert('Выберите аватар');
+        return;
+    }
+
+    if (!text.trim()) {
+        alert('Введите текст для видео');
+        return;
+    }
+
+    GSRPipeline.showStatus('videoStatus', 'processing', 'Создание видео...');
+    
+    try {
+        const response = await fetch('/api/trends/generate-video', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text: text,
+                avatar_id: avatarId,
+                video_format: videoFormat
+            })
+        });
+        const result = await response.json();
+
+        if (result.success && result.video_id) {
+            // Начинаем проверку статуса
+            checkTrendsVideoStatus(result.video_id);
+        } else if (result.success && result.video_url) {
+            // Fallback для старого API
+            document.getElementById('videoPlayer').innerHTML = `
+                <video controls class="video-player" style="width: 100%; max-width: 500px;">
+                    <source src="${result.video_url}" type="video/mp4">
+                    Ваш браузер не поддерживает видео элемент.
+                </video>
+                <div class="mt-2">
+                    <a href="${result.video_url}" target="_blank" class="btn btn-gsr-accent">
+                        <i class="fas fa-download me-2"></i>Скачать видео
+                    </a>
+                </div>
+            `;
+            currentVideoUrl = result.video_url;
+            renderFinalResult(result.video_url);
+            GSRPipeline.showStatus('videoStatus', 'completed', '✅ Видео создано!');
+            log(`Видео успешно создано`, 'success');
+        } else {
+            GSRPipeline.showStatus('videoStatus', 'error', '❌ ' + result.message);
+            log(`Ошибка создания видео: ${result.message}`, 'error');
+        }
+    } catch (error) {
+        GSRPipeline.showStatus('videoStatus', 'error', '❌ ' + error.message);
+        log(`Ошибка создания видео: ${error.message}`, 'error');
+    }
+}
+
+// Проверка статуса видео для трендов
+
+function renderFinalResult(videoUrl) {
+    const finalCard = document.getElementById('finalResult');
+    if (finalCard) {
+        finalCard.classList.remove('d-none');
+        GSRPipeline.enableStep('finalResult');
+        GSRPipeline.activateStep('finalResult', { exclusive: true });
+    }
+    const container = document.getElementById('finalVideoResult');
+    if (!container) return;
+
+    const safeText = (rewrittenText || transcriptText || '')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/
+/g, '<br>');
+
+    const audioSection = currentAudioUrl
+        ? `<a href="${currentAudioUrl}" class="btn btn-outline-primary" target="_blank">
+                <i class="fas fa-volume-up me-2"></i>Скачать аудио
+           </a>`
+        : '';
+
+    container.innerHTML = `
+        <div class="row g-4 align-items-start">
+            <div class="col-lg-6">
+                <video controls class="video-player" style="width: 100%; max-height: 400px;">
+                    <source src="${videoUrl}" type="video/mp4">
+                    Ваш браузер не поддерживает видео элемент.
+                </video>
+            </div>
+            <div class="col-lg-6">
+                <div class="mb-3">
+                    <h6 class="fw-bold text-muted">Переписанный текст</h6>
+                    <div class="p-3 border rounded bg-light" style="max-height: 280px; overflow-y: auto;">${safeText}</div>
+                </div>
+                <div class="d-grid gap-2">
+                    ${audioSection}
+                    <a href="${videoUrl}" class="btn btn-gsr-accent" target="_blank">
+                        <i class="fas fa-download me-2"></i>Скачать видео
+                    </a>
+                </div>
+            </div>
+        </div>`;
+}
+
+async function checkTrendsVideoStatus(videoId) {
+    const maxAttempts = 30; // 5 минут с интервалом 10 секунд
+    let attempts = 0;
+    
+    const checkStatus = async () => {
+        try {
+            const response = await fetch('/api/trends/check-video-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ video_id: videoId })
+            });
+            
+            const result = await response.json();
+            
+            if (result.status === 'completed' && result.video_url) {
+                // Видео готово!
+                document.getElementById('videoPlayer').innerHTML = `
+                    <video controls class="video-player" style="width: 100%; max-width: 500px;">
+                        <source src="${result.video_url}" type="video/mp4">
+                        Ваш браузер не поддерживает видео элемент.
+                    </video>
+                    <div class="mt-2">
+                        <a href="${result.video_url}" target="_blank" class="btn btn-gsr-accent">
+                            <i class="fas fa-download me-2"></i>Скачать видео
+                        </a>
+                    </div>
+                `;
+                currentVideoUrl = result.video_url;
+                renderFinalResult(result.video_url);
+                GSRPipeline.showStatus('videoStatus', 'completed', '✅ Видео создано!');
+                log('Видео успешно создано', 'success');
+            } else if (result.status === 'failed') {
+                GSRPipeline.showStatus('videoStatus', 'error', '❌ ' + (result.error_message || 'Генерация видео не удалась'));
+                log(`Ошибка создания видео: ${result.error_message}`, 'error');
+            } else {
+                // Показываем прогресс
+                const progress = Math.min(attempts * 3.33, 95); // 0-95%
+                GSRPipeline.showStatus('videoStatus', 'processing', `Создание видео... ${progress.toFixed(0)}% (${attempts * 10}с)`);
+                
+                attempts++;
+                if (attempts < maxAttempts) {
+                    setTimeout(checkStatus, 10000); // Проверяем каждые 10 секунд
+                } else {
+                    GSRPipeline.showStatus('videoStatus', 'error', '❌ Превышено время ожидания генерации видео');
+                    log(`Превышено время ожидания генерации видео`, 'error');
+                }
+            }
+        } catch (error) {
+            GSRPipeline.showStatus('videoStatus', 'error', '❌ Ошибка: ' + error.message);
+            log(`Ошибка проверки статуса: ${error.message}`, 'error');
+        }
+    };
+    
+    checkStatus();
+}
+
+
+
+
+function sortReels(criteria) {
+    // Логика сортировки рилсов
+    console.log('Sorting by:', criteria);
+}
+
+// Переменная для хранения данных текущего предпросматриваемого рилса
+let currentPreviewReel = null;
+
+function openVideoPreview(videoUrl, username, caption, index) {
+    // Сохраняем данные текущего рилса
+    currentPreviewReel = {
+        videoUrl: videoUrl,
+        username: username,
+        caption: caption,
+        index: index,
+        reelData: lastLoadedReels ? lastLoadedReels[index] : null
+    };
+    
+    // Заполняем модальное окно данными
+    document.getElementById('previewAuthor').textContent = `@${username}`;
+    document.getElementById('previewCaption').textContent = caption;
+    
+    // Устанавливаем статистику
+    const reelData = currentPreviewReel.reelData;
+    if (reelData) {
+        document.getElementById('previewViews').textContent = (reelData.views_count || 0).toLocaleString();
+        document.getElementById('previewLikes').textContent = (reelData.likes_count || 0).toLocaleString();
+        document.getElementById('previewComments').textContent = (reelData.comments_count || 0).toLocaleString();
+    }
+    
+    // Показываем загрузчик
+    document.getElementById('videoLoader').classList.remove('d-none');
+    
+    // Устанавливаем источник видео
+    const video = document.getElementById('previewVideo');
+    const source = document.getElementById('previewVideoSource');
+    
+    // Обработчик загрузки видео
+    video.addEventListener('loadstart', function() {
+        document.getElementById('videoLoader').classList.remove('d-none');
+    });
+    
+    video.addEventListener('canplay', function() {
+        document.getElementById('videoLoader').classList.add('d-none');
+    });
+    
+    video.addEventListener('error', function() {
+        document.getElementById('videoLoader').classList.add('d-none');
+        // Показываем заглушку вместо видео
+        video.poster = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPtCS0LjQtNC10L4g0L3QtSDQtNC+0YHRgtGD0L/QvdC+PC90ZXh0Pjwvc3ZnPg==';
+    });
+    
+    // Устанавливаем URL видео
+    if (videoUrl && videoUrl.includes('http')) {
+        // Проверяем, является ли это прямой ссылкой на видео
+        if (videoUrl.includes('.mp4') || videoUrl.includes('.mov') || videoUrl.includes('.webm')) {
+            source.src = videoUrl;
+            console.log('Loading video:', videoUrl);
+        } else {
+            // Это ссылка на Instagram пост, показываем заглушку
+            console.log('Instagram post URL, showing placeholder');
+            source.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
+        }
+    } else {
+        // Если нет URL, используем заглушку
+        source.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
+        console.log('Using fallback video');
+    }
+    
+    video.load(); // Перезагружаем видео с новым источником
+    
+    // Открываем модальное окно
+    const modal = new bootstrap.Modal(document.getElementById('videoPreviewModal'));
+    modal.show();
+}
+
+function selectReelFromPreview() {
+    if (currentPreviewReel && currentPreviewReel.reelData) {
+        const reelData = currentPreviewReel.reelData;
+        
+        // Закрываем модальное окно
+        const modal = bootstrap.Modal.getInstance(document.getElementById('videoPreviewModal'));
+        modal.hide();
+        
+        // Выбираем рилс через существующую функцию
+        selectReel(reelData.id, reelData.video_url, currentPreviewReel.index);
+    }
+}
+
+function openInstagramPost() {
+    if (currentPreviewReel && currentPreviewReel.reelData) {
+        const reelData = currentPreviewReel.reelData;
+        const instagramUrl = reelData.url || reelData.video_url;
+        
+        if (instagramUrl && instagramUrl.includes('instagram.com')) {
+            window.open(instagramUrl, '_blank');
+        } else {
+            alert('Ссылка на Instagram недоступна');
+        }
+    }
+}
+
+// Очистка видео при закрытии модального окна
+document.getElementById('videoPreviewModal').addEventListener('hidden.bs.modal', function () {
+    const video = document.getElementById('previewVideo');
+    video.pause();
+    video.currentTime = 0;
+    currentPreviewReel = null;
+});
+
+</script>
+
+<!-- Модальное окно для предпросмотра видео -->
+<div class="modal fade" id="videoPreviewModal" tabindex="-1" aria-labelledby="videoPreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="videoPreviewModalLabel">
+                    <i class="fas fa-play-circle me-2"></i>Предпросмотр рилса
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <div class="mb-3">
+                    <h6 id="previewAuthor" class="text-primary"></h6>
+                    <p id="previewCaption" class="text-muted small"></p>
+                </div>
+                
+                <!-- Контейнер для видео -->
+                <div class="video-container mb-3" style="position: relative; max-width: 400px; margin: 0 auto;">
+                    <video id="previewVideo" 
+                           controls 
+                           style="width: 100%; height: auto; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);"
+                           poster="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPtCS0LjQtNC10L4g0LTQu9GPINC/0YDQtdC00L/RgNC+0YHQvNC+0YLRgNCwPC90ZXh0Pjwvc3ZnPg==">
+                        <source id="previewVideoSource" src="" type="video/mp4">
+                        Ваш браузер не поддерживает воспроизведение видео.
+                    </video>
+                    
+                    <!-- Загрузочный индикатор -->
+                    <div id="videoLoader" class="position-absolute top-50 start-50 translate-middle d-none">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Загрузка...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Информация о видео -->
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded">
+                            <i class="fas fa-eye text-primary"></i>
+                            <div id="previewViews" class="fw-bold">-</div>
+                            <small class="text-muted">Просмотры</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded">
+                            <i class="fas fa-heart text-danger"></i>
+                            <div id="previewLikes" class="fw-bold">-</div>
+                            <small class="text-muted">Лайки</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded">
+                            <i class="fas fa-comment text-info"></i>
+                            <div id="previewComments" class="fw-bold">-</div>
+                            <small class="text-muted">Комменты</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" onclick="openInstagramPost()">
+                    <i class="fas fa-external-link-alt me-2"></i>Открыть в Instagram
+                </button>
+                <button type="button" class="btn btn-success" onclick="selectReelFromPreview()">
+                    <i class="fas fa-check me-2"></i>Выбрать этот рилс
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Закрыть
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

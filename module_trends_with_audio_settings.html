@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модуль трендвотчинга - Обновленный</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .step-number-gsr {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        .step-completed .step-number-gsr {
+            background: #28a745;
+            color: white;
+        }
+        .step-disabled {
+            opacity: 0.6;
+        }
+        .card-gsr {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        .gsr-text-primary {
+            color: #007bff;
+        }
+        .btn-gsr-accent {
+            background: #28a745;
+            border-color: #28a745;
+            color: white;
+        }
+        .btn-gsr-accent:hover {
+            background: #218838;
+            border-color: #1e7e34;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">Модуль трендвотчинга</h1>
+        
+        <!-- Шаг 4: Переписывание текста -->
+        <div class="row step-container">
+            <div class="col-12">
+                <div class="card-gsr progress-step step-completed" id="step4">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="step-number-gsr">4</div>
+                        <div>
+                            <h4 class="gsr-heading mb-1 gsr-text-primary">Переписывание текста</h4>
+                            <p class="text-muted mb-0">Перепишите текст для озвучки</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Переписанный текст:</label>
+                        <textarea class="form-control" id="rewrittenText" rows="4" placeholder="Введите переписанный текст...">Слушай, братан, устроился я на работу сборщиком. Очень круто, не ожидал. Что делаем: приходишь на склад, собираешь заказы — и всё, время летит незаметно. Команда нормальная, смеёмся, помогаем друг другу, никто не строит из себя начальника. Самое главное — деньги приходят чётко, через приложение, без задержек. Привык уже: поработал — получил, и спи спокойно. График тоже выбираешь под себя, хочешь дневную, хочешь сменную работу. Короче, если ищешь нормальную подработку без развода — приходи в JSR.</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Шаг 5: Генерация аудио с настройками -->
+        <div class="row step-container">
+            <div class="col-12">
+                <div class="card-gsr progress-step step-disabled" id="step5">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="step-number-gsr">5</div>
+                        <div>
+                            <h4 class="gsr-heading mb-1 gsr-text-primary">Генерация аудио</h4>
+                            <p class="text-muted mb-0">Создайте голосовое сопровождение</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Сначала перепишите текст на шаге 4
+                        </div>
+                    </div>
+                    
+                    <!-- Настройки голоса -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <label class="form-label gsr-text-primary">
+                                <i class="fas fa-microphone me-2"></i>Голос
+                            </label>
+                            <select class="form-select" id="audioVoiceId">
+                                <option value="jP9L6ZC55cz5mmx4ZpCk">Архангельский Алексей (Русский)</option>
+                                <option value="JBFqnCBsd6RMkjVDRZzb">Rachel (Female, American)</option>
+                                <option value="EXAVITQu4vr4xnSDxMaL">Bella (Female, American)</option>
+                                <option value="VR6AewLTigWG4xSOukaG">Josh (Male, American)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label gsr-text-primary">
+                                <i class="fas fa-robot me-2"></i>Модель
+                            </label>
+                            <select class="form-select" id="audioModelId">
+                                <option value="eleven_flash_v2_5">Eleven Flash v2.5 (Быстрая)</option>
+                                <option value="eleven_multilingual_v2">Eleven Multilingual v2 (Стабильная)</option>
+                                <option value="eleven_turbo_v2_5">Eleven Turbo v2.5 (Сбалансированная)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label gsr-text-primary">
+                                <i class="fas fa-tachometer-alt me-2"></i>Скорость
+                            </label>
+                            <input type="range" class="form-range" id="audioSpeed" min="0.5" max="2.0" step="0.1" value="1.0">
+                            <small class="text-muted" id="speedValue">1.0x</small>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label gsr-text-primary">
+                                <i class="fas fa-shield-alt me-2"></i>Стабильность
+                            </label>
+                            <input type="range" class="form-range" id="audioStability" min="0.0" max="1.0" step="0.1" value="0.5">
+                            <small class="text-muted" id="stabilityValue">0.5</small>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label gsr-text-primary">
+                                <i class="fas fa-bullseye me-2"></i>Схожесть
+                            </label>
+                            <input type="range" class="form-range" id="audioSimilarity" min="0.0" max="1.0" step="0.1" value="0.5">
+                            <small class="text-muted" id="similarityValue">0.5</small>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-gsr-accent btn-lg" onclick="generateAudio()">
+                        <i class="fas fa-volume-up me-2"></i>Создать аудио
+                    </button>
+                    
+                    <div id="audioStatus" class="mt-3"></div>
+                    
+                    <div id="audioResult" class="mt-4" style="display: none;">
+                        <h5 class="gsr-text-primary">Сгенерированное аудио:</h5>
+                        <audio controls class="w-100">
+                            <source id="audioSource" src="" type="audio/mpeg">
+                            Ваш браузер не поддерживает аудио элемент.
+                        </audio>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Обновленная функция генерации аудио с настройками голоса
+        function generateAudio() {
+            const statusDiv = document.getElementById('audioStatus');
+            const resultDiv = document.getElementById('audioResult');
+            const audioSource = document.getElementById('audioSource');
+            
+            // Получаем настройки голоса
+            const voiceId = document.getElementById('audioVoiceId').value;
+            const modelId = document.getElementById('audioModelId').value;
+            const speed = parseFloat(document.getElementById('audioSpeed').value);
+            const stability = parseFloat(document.getElementById('audioStability').value);
+            const similarity = parseFloat(document.getElementById('audioSimilarity').value);
+            
+            // Получаем текст из шага 4
+            const rewrittenText = document.getElementById('rewrittenText').value;
+            if (!rewrittenText.trim()) {
+                statusDiv.innerHTML = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>Сначала перепишите текст на шаге 4</div>';
+                return;
+            }
+            
+            statusDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>Генерируем аудио с настройками голоса...</div>';
+            
+            // Отправляем запрос с полными настройками
+            fetch('/api/trends/generate-audio', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    text: rewrittenText,
+                    voice_id: voiceId,
+                    model_id: modelId,
+                    speed: speed,
+                    stability: stability,
+                    similarity_boost: similarity
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>Аудио создано!</div>';
+                    
+                    // Загружаем аудио в плеер
+                    audioSource.src = data.audio_url;
+                    resultDiv.style.display = 'block';
+                    
+                    // Обновляем статус шага
+                    document.getElementById('step5').classList.remove('step-disabled');
+                    document.getElementById('step5').classList.add('step-completed');
+                    
+                } else {
+                    statusDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>Ошибка: ' + data.message + '</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Audio generation error:', error);
+                statusDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>Ошибка подключения: ' + error.message + '</div>';
+            });
+        }
+        
+        // Инициализация слайдеров
+        document.addEventListener('DOMContentLoaded', function() {
+            // Обновление значений слайдеров
+            document.getElementById('audioSpeed').addEventListener('input', function() {
+                document.getElementById('speedValue').textContent = this.value + 'x';
+            });
+            
+            document.getElementById('audioStability').addEventListener('input', function() {
+                document.getElementById('stabilityValue').textContent = this.value;
+            });
+            
+            document.getElementById('audioSimilarity').addEventListener('input', function() {
+                document.getElementById('similarityValue').textContent = this.value;
+            });
+        });
+    </script>
+</body>
+</html>

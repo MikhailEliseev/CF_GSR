@@ -1,0 +1,829 @@
+{% extends "base.html" %}
+
+{% block title %}Мониторинг Аккаунтов - Контент Завод{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Заголовок -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h2 class="mb-1 text-dark">
+                        <i class="fas fa-chart-line me-3 text-success"></i>
+                        Мониторинг Аккаунтов
+                    </h2>
+                    <p class="text-muted mb-0">Отслеживание статистики наших постов и выявление вирусного контента</p>
+                </div>
+                <button class="btn btn-success btn-lg" onclick="showAddAccountModal()">
+                    <i class="fas fa-plus me-2"></i>Добавить аккаунт
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистика -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">Всего аккаунтов</h6>
+                            <h3 class="mb-0" id="totalAccounts">12</h3>
+                        </div>
+                        <i class="fas fa-users fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">Вирусные посты</h6>
+                            <h3 class="mb-0" id="viralPosts">3</h3>
+                        </div>
+                        <i class="fas fa-fire fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">Общие просмотры</h6>
+                            <h3 class="mb-0" id="totalViews">2.4M</h3>
+                        </div>
+                        <i class="fas fa-eye fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">Прирост за неделю</h6>
+                            <h3 class="mb-0" id="weeklyGrowth">+15%</h3>
+                        </div>
+                        <i class="fas fa-trending-up fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистика своих аккаунтов -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Статистика своих аккаунтов
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Топ-5 аккаунтов по просмотрам</h6>
+                            <div id="topAccountsByViews">
+                                <!-- Загружается через JavaScript -->
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Топ-5 вирусных постов</h6>
+                            <div id="topViralPosts">
+                                <!-- Загружается через JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Распределение по платформам</h6>
+                            <div id="platformDistribution">
+                                <!-- Загружается через JavaScript -->
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Статистика за последние 7 дней</h6>
+                            <div id="weeklyStats">
+                                <!-- Загружается через JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Фильтры -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Статус аккаунта</label>
+                            <select class="form-select" id="statusFilter">
+                                <option value="">Все аккаунты</option>
+                                <option value="active">Активные</option>
+                                <option value="viral">Вирусные</option>
+                                <option value="inactive">Неактивные</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Период</label>
+                            <select class="form-select" id="periodFilter">
+                                <option value="today">Сегодня</option>
+                                <option value="week">Неделя</option>
+                                <option value="month">Месяц</option>
+                                <option value="all">Все время</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Минимум просмотров</label>
+                            <input type="number" class="form-control" id="viewsFilter" placeholder="1000">
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-primary w-100" onclick="applyFilters()">
+                                <i class="fas fa-filter me-2"></i>Применить фильтры
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Таблица аккаунтов -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-table me-2"></i>Наши аккаунты
+                        <span class="badge bg-primary ms-2" id="accountsCount">12</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="accountsTable">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 50px;">#</th>
+                                    <th>Аккаунт</th>
+                                    <th style="width: 100px;">Статус</th>
+                                    <th style="width: 120px;">Просмотры</th>
+                                    <th style="width: 120px;">Лайки</th>
+                                    <th style="width: 120px;">Комментарии</th>
+                                    <th style="width: 120px;">Прирост</th>
+                                    <th style="width: 150px;">Последний пост</th>
+                                    <th style="width: 100px;">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="accountsTableBody">
+                                <!-- Данные загружаются через JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно добавления аккаунта -->
+<div class="modal fade" id="addAccountModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>Добавить аккаунт
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addAccountForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Имя аккаунта</label>
+                            <input type="text" class="form-control" id="accountName" placeholder="@username" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Платформа</label>
+                            <select class="form-select" id="accountPlatform" required>
+                                <option value="">Выберите платформу</option>
+                                <option value="instagram">Instagram</option>
+                                <option value="tiktok">TikTok</option>
+                                <option value="youtube">YouTube</option>
+                                <option value="vk">VKontakte</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">URL аккаунта</label>
+                            <input type="url" class="form-control" id="accountUrl" placeholder="https://instagram.com/username" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Категория контента</label>
+                            <select class="form-select" id="accountCategory">
+                                <option value="business">Бизнес</option>
+                                <option value="lifestyle">Образ жизни</option>
+                                <option value="education">Образование</option>
+                                <option value="entertainment">Развлечения</option>
+                                <option value="news">Новости</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Описание</label>
+                            <textarea class="form-control" id="accountDescription" rows="3" placeholder="Краткое описание аккаунта и его целей"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-success" onclick="addAccount()">
+                    <i class="fas fa-plus me-2"></i>Добавить аккаунт
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно детальной статистики -->
+<div class="modal fade" id="accountStatsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-chart-bar me-2"></i>Детальная статистика
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="accountStatsContent">
+                    <!-- Контент загружается динамически -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.viral-post {
+    background: linear-gradient(135deg, #ff6b6b, #ffa500) !important;
+    color: white !important;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+.status-active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-viral {
+    background: #fff3cd;
+    color: #856404;
+    font-weight: bold;
+}
+
+.status-inactive {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.growth-positive {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.growth-negative {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+</style>
+
+<script>
+// Демо данные аккаунтов
+const demoAccounts = [
+    {
+        id: 1,
+        name: "@business_news_ru",
+        platform: "Instagram",
+        status: "viral",
+        views: 125000,
+        likes: 8500,
+        comments: 320,
+        growth: "+45%",
+        lastPost: "2 часа назад",
+        category: "Бизнес",
+        url: "https://instagram.com/business_news_ru"
+    },
+    {
+        id: 2,
+        name: "@lifestyle_tips",
+        platform: "TikTok",
+        status: "active",
+        views: 89000,
+        likes: 12000,
+        comments: 450,
+        growth: "+23%",
+        lastPost: "5 часов назад",
+        category: "Образ жизни",
+        url: "https://tiktok.com/@lifestyle_tips"
+    },
+    {
+        id: 3,
+        name: "@education_hub",
+        platform: "YouTube",
+        status: "viral",
+        views: 340000,
+        likes: 15000,
+        comments: 890,
+        growth: "+67%",
+        lastPost: "1 день назад",
+        category: "Образование",
+        url: "https://youtube.com/@education_hub"
+    },
+    {
+        id: 4,
+        name: "@tech_reviews",
+        platform: "Instagram",
+        status: "active",
+        views: 67000,
+        likes: 4200,
+        comments: 180,
+        growth: "+12%",
+        lastPost: "3 часа назад",
+        category: "Технологии",
+        url: "https://instagram.com/tech_reviews"
+    },
+    {
+        id: 5,
+        name: "@fitness_motivation",
+        platform: "TikTok",
+        status: "viral",
+        views: 280000,
+        likes: 25000,
+        comments: 1200,
+        growth: "+89%",
+        lastPost: "4 часа назад",
+        category: "Фитнес",
+        url: "https://tiktok.com/@fitness_motivation"
+    },
+    {
+        id: 6,
+        name: "@cooking_tips",
+        platform: "Instagram",
+        status: "active",
+        views: 45000,
+        likes: 3200,
+        comments: 95,
+        growth: "+8%",
+        lastPost: "6 часов назад",
+        category: "Кулинария",
+        url: "https://instagram.com/cooking_tips"
+    },
+    {
+        id: 7,
+        name: "@travel_blogger",
+        platform: "YouTube",
+        status: "active",
+        views: 156000,
+        likes: 8900,
+        comments: 340,
+        growth: "+34%",
+        lastPost: "2 дня назад",
+        category: "Путешествия",
+        url: "https://youtube.com/@travel_blogger"
+    },
+    {
+        id: 8,
+        name: "@fashion_trends",
+        platform: "Instagram",
+        status: "inactive",
+        views: 23000,
+        likes: 1200,
+        comments: 45,
+        growth: "-5%",
+        lastPost: "1 неделя назад",
+        category: "Мода",
+        url: "https://instagram.com/fashion_trends"
+    },
+    {
+        id: 9,
+        name: "@music_producer",
+        platform: "TikTok",
+        status: "active",
+        views: 98000,
+        likes: 7800,
+        comments: 280,
+        growth: "+19%",
+        lastPost: "1 день назад",
+        category: "Музыка",
+        url: "https://tiktok.com/@music_producer"
+    },
+    {
+        id: 10,
+        name: "@art_showcase",
+        platform: "Instagram",
+        status: "active",
+        views: 34000,
+        likes: 2100,
+        comments: 78,
+        growth: "+15%",
+        lastPost: "8 часов назад",
+        category: "Искусство",
+        url: "https://instagram.com/art_showcase"
+    },
+    {
+        id: 11,
+        name: "@gaming_news",
+        platform: "YouTube",
+        status: "viral",
+        views: 420000,
+        likes: 18000,
+        comments: 950,
+        growth: "+156%",
+        lastPost: "3 часа назад",
+        category: "Игры",
+        url: "https://youtube.com/@gaming_news"
+    },
+    {
+        id: 12,
+        name: "@motivation_daily",
+        platform: "TikTok",
+        status: "active",
+        views: 78000,
+        likes: 5600,
+        comments: 190,
+        growth: "+28%",
+        lastPost: "5 часов назад",
+        category: "Мотивация",
+        url: "https://tiktok.com/@motivation_daily"
+    }
+];
+
+let filteredAccounts = [...demoAccounts];
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    loadAccounts();
+    updateStatistics();
+    loadAccountStatistics();
+});
+
+function loadAccounts() {
+    const tbody = document.getElementById('accountsTableBody');
+    tbody.innerHTML = '';
+    
+    filteredAccounts.forEach((account, index) => {
+        const row = document.createElement('tr');
+        
+        // Определяем класс для вирусных постов
+        const rowClass = account.status === 'viral' ? 'viral-post' : '';
+        
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fab fa-${getPlatformIcon(account.platform)} fa-2x text-primary"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold">${account.name}</div>
+                        <small class="text-muted">${account.category}</small>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <span class="badge status-${account.status}">${getStatusText(account.status)}</span>
+            </td>
+            <td class="fw-bold">${formatNumber(account.views)}</td>
+            <td>${formatNumber(account.likes)}</td>
+            <td>${formatNumber(account.comments)}</td>
+            <td class="${account.growth.startsWith('+') ? 'growth-positive' : 'growth-negative'}">${account.growth}</td>
+            <td>
+                <small class="text-muted">${account.lastPost}</small>
+            </td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" onclick="viewAccountStats(${account.id})" title="Статистика">
+                        <i class="fas fa-chart-bar"></i>
+                    </button>
+                    <button class="btn btn-outline-success" onclick="editAccount(${account.id})" title="Редактировать">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="deleteAccount(${account.id})" title="Удалить">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        
+        if (rowClass) {
+            row.className = rowClass;
+        }
+        
+        tbody.appendChild(row);
+    });
+    
+    document.getElementById('accountsCount').textContent = filteredAccounts.length;
+}
+
+function updateStatistics() {
+    const totalAccounts = demoAccounts.length;
+    const viralPosts = demoAccounts.filter(acc => acc.status === 'viral').length;
+    const totalViews = demoAccounts.reduce((sum, acc) => sum + acc.views, 0);
+    const weeklyGrowth = Math.floor(Math.random() * 30) + 10; // Случайный прирост 10-40%
+    
+    document.getElementById('totalAccounts').textContent = totalAccounts;
+    document.getElementById('viralPosts').textContent = viralPosts;
+    document.getElementById('totalViews').textContent = formatNumber(totalViews);
+    document.getElementById('weeklyGrowth').textContent = `+${weeklyGrowth}%`;
+}
+
+function getPlatformIcon(platform) {
+    const icons = {
+        'Instagram': 'instagram',
+        'TikTok': 'tiktok',
+        'YouTube': 'youtube',
+        'VKontakte': 'vk'
+    };
+    return icons[platform] || 'globe';
+}
+
+function getStatusText(status) {
+    const statuses = {
+        'active': 'Активный',
+        'viral': 'Вирусный',
+        'inactive': 'Неактивный'
+    };
+    return statuses[status] || status;
+}
+
+function formatNumber(num) {
+    if (num >= 1000000) {
+        return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+        return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
+}
+
+function showAddAccountModal() {
+    const modal = new bootstrap.Modal(document.getElementById('addAccountModal'));
+    modal.show();
+}
+
+function addAccount() {
+    const form = document.getElementById('addAccountForm');
+    const formData = new FormData(form);
+    
+    const newAccount = {
+        id: demoAccounts.length + 1,
+        name: document.getElementById('accountName').value,
+        platform: document.getElementById('accountPlatform').value,
+        status: 'active',
+        views: Math.floor(Math.random() * 100000) + 10000,
+        likes: Math.floor(Math.random() * 5000) + 500,
+        comments: Math.floor(Math.random() * 200) + 20,
+        growth: `+${Math.floor(Math.random() * 50) + 5}%`,
+        lastPost: 'Только что',
+        category: document.getElementById('accountCategory').value,
+        url: document.getElementById('accountUrl').value
+    };
+    
+    demoAccounts.push(newAccount);
+    filteredAccounts = [...demoAccounts];
+    loadAccounts();
+    updateStatistics();
+    
+    const modal = bootstrap.Modal.getInstance(document.getElementById('addAccountModal'));
+    modal.hide();
+    form.reset();
+    
+    // Показать уведомление
+    showNotification('Аккаунт успешно добавлен!', 'success');
+}
+
+function applyFilters() {
+    const statusFilter = document.getElementById('statusFilter').value;
+    const periodFilter = document.getElementById('periodFilter').value;
+    const viewsFilter = document.getElementById('viewsFilter').value;
+    
+    filteredAccounts = demoAccounts.filter(account => {
+        if (statusFilter && account.status !== statusFilter) return false;
+        if (viewsFilter && account.views < parseInt(viewsFilter)) return false;
+        return true;
+    });
+    
+    loadAccounts();
+}
+
+function viewAccountStats(accountId) {
+    const account = demoAccounts.find(acc => acc.id === accountId);
+    if (!account) return;
+    
+    const content = document.getElementById('accountStatsContent');
+    content.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Основная информация</h6>
+                <table class="table table-sm">
+                    <tr><td>Аккаунт:</td><td>${account.name}</td></tr>
+                    <tr><td>Платформа:</td><td>${account.platform}</td></tr>
+                    <tr><td>Категория:</td><td>${account.category}</td></tr>
+                    <tr><td>Статус:</td><td><span class="badge status-${account.status}">${getStatusText(account.status)}</span></td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6>Статистика</h6>
+                <table class="table table-sm">
+                    <tr><td>Просмотры:</td><td class="fw-bold">${formatNumber(account.views)}</td></tr>
+                    <tr><td>Лайки:</td><td>${formatNumber(account.likes)}</td></tr>
+                    <tr><td>Комментарии:</td><td>${formatNumber(account.comments)}</td></tr>
+                    <tr><td>Прирост:</td><td class="${account.growth.startsWith('+') ? 'growth-positive' : 'growth-negative'}">${account.growth}</td></tr>
+                </table>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-12">
+                <h6>График роста</h6>
+                <div class="bg-light p-4 rounded text-center">
+                    <i class="fas fa-chart-line fa-3x text-muted"></i>
+                    <p class="mt-2 text-muted">График будет отображаться здесь</p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const modal = new bootstrap.Modal(document.getElementById('accountStatsModal'));
+    modal.show();
+}
+
+function editAccount(accountId) {
+    showNotification('Функция редактирования в разработке', 'info');
+}
+
+function deleteAccount(accountId) {
+    if (confirm('Вы уверены, что хотите удалить этот аккаунт?')) {
+        const index = demoAccounts.findIndex(acc => acc.id === accountId);
+        if (index > -1) {
+            demoAccounts.splice(index, 1);
+            filteredAccounts = [...demoAccounts];
+            loadAccounts();
+            updateStatistics();
+            showNotification('Аккаунт удален', 'success');
+        }
+    }
+}
+
+function loadAccountStatistics() {
+    // Топ-5 аккаунтов по просмотрам
+    const topAccounts = [...demoAccounts]
+        .sort((a, b) => b.views - a.views)
+        .slice(0, 5);
+    
+    const topAccountsHtml = topAccounts.map((account, index) => `
+        <div class="d-flex align-items-center mb-2 p-2 bg-light rounded">
+            <span class="badge bg-primary me-2">${index + 1}</span>
+            <div class="flex-grow-1">
+                <div class="fw-bold">${account.name}</div>
+                <small class="text-muted">${account.platform}</small>
+            </div>
+            <div class="text-end">
+                <div class="fw-bold text-primary">${formatNumber(account.views)}</div>
+                <small class="text-muted">просмотров</small>
+            </div>
+        </div>
+    `).join('');
+    
+    document.getElementById('topAccountsByViews').innerHTML = topAccountsHtml;
+    
+    // Топ-5 вирусных постов
+    const viralPosts = demoAccounts
+        .filter(acc => acc.status === 'viral')
+        .sort((a, b) => b.views - a.views)
+        .slice(0, 5);
+    
+    const viralPostsHtml = viralPosts.map((account, index) => `
+        <div class="d-flex align-items-center mb-2 p-2 bg-warning bg-opacity-10 rounded">
+            <span class="badge bg-warning me-2">${index + 1}</span>
+            <div class="flex-grow-1">
+                <div class="fw-bold">${account.name}</div>
+                <small class="text-muted">${account.platform} • ${account.growth}</small>
+            </div>
+            <div class="text-end">
+                <div class="fw-bold text-warning">${formatNumber(account.views)}</div>
+                <small class="text-muted">просмотров</small>
+            </div>
+        </div>
+    `).join('');
+    
+    document.getElementById('topViralPosts').innerHTML = viralPostsHtml;
+    
+    // Распределение по платформам
+    const platformStats = {};
+    demoAccounts.forEach(account => {
+        platformStats[account.platform] = (platformStats[account.platform] || 0) + 1;
+    });
+    
+    const platformHtml = Object.entries(platformStats).map(([platform, count]) => `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex align-items-center">
+                <i class="fab fa-${getPlatformIcon(platform)} me-2 text-primary"></i>
+                <span>${platform}</span>
+            </div>
+            <div class="d-flex align-items-center">
+                <div class="progress me-2" style="width: 100px; height: 8px;">
+                    <div class="progress-bar bg-primary" style="width: ${(count / demoAccounts.length) * 100}%"></div>
+                </div>
+                <span class="badge bg-primary">${count}</span>
+            </div>
+        </div>
+    `).join('');
+    
+    document.getElementById('platformDistribution').innerHTML = platformHtml;
+    
+    // Статистика за последние 7 дней
+    const weeklyStats = {
+        newPosts: Math.floor(Math.random() * 20) + 10,
+        totalViews: Math.floor(Math.random() * 500000) + 200000,
+        newFollowers: Math.floor(Math.random() * 1000) + 500,
+        engagement: (Math.random() * 5 + 2).toFixed(1)
+    };
+    
+    const weeklyStatsHtml = `
+        <div class="row g-2">
+            <div class="col-6">
+                <div class="text-center p-2 bg-light rounded">
+                    <div class="fw-bold text-primary">${weeklyStats.newPosts}</div>
+                    <small class="text-muted">новых постов</small>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="text-center p-2 bg-light rounded">
+                    <div class="fw-bold text-success">${formatNumber(weeklyStats.totalViews)}</div>
+                    <small class="text-muted">просмотров</small>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="text-center p-2 bg-light rounded">
+                    <div class="fw-bold text-info">${formatNumber(weeklyStats.newFollowers)}</div>
+                    <small class="text-muted">подписчиков</small>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="text-center p-2 bg-light rounded">
+                    <div class="fw-bold text-warning">${weeklyStats.engagement}%</div>
+                    <small class="text-muted">вовлеченность</small>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('weeklyStats').innerHTML = weeklyStatsHtml;
+}
+
+function showNotification(message, type = 'info') {
+    const alertClass = {
+        'success': 'alert-success',
+        'error': 'alert-danger',
+        'warning': 'alert-warning',
+        'info': 'alert-info'
+    }[type] || 'alert-info';
+    
+    const notification = document.createElement('div');
+    notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

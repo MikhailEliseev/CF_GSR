@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Трендвотчинг - Контент Завод{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-chart-line text-primary me-2"></i>
+                Модуль Трендвотчинг
+            </h2>
+            <a href="{{ url_for('settings_page', module_name='trends') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-cog me-2"></i>Настройки
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card settings-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-play-circle me-2"></i>
+                    Запуск анализа трендов
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="trendsForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="daysBack" class="form-label">
+                                    <i class="fas fa-calendar me-2"></i>
+                                    Период анализа (дней назад)
+                                </label>
+                                <select class="form-select" id="daysBack" name="days_back">
+                                    <option value="3">3 дня</option>
+                                    <option value="7" selected>7 дней</option>
+                                    <option value="14">14 дней</option>
+                                    <option value="30">30 дней</option>
+                                </select>
+                                <div class="form-text">
+                                    Анализ постов конкурентов за выбранный период
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="voiceId" class="form-label">
+                                    <i class="fas fa-microphone me-2"></i>
+                                    Голос для озвучки
+                                </label>
+                                <select class="form-select" id="voiceId" name="voice_id" required>
+                                    <option value="">Выберите голос...</option>
+                                </select>
+                                <div class="form-text">
+                                    Голос из ElevenLabs для озвучивания
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="avatarId" class="form-label">
+                                    <i class="fas fa-user me-2"></i>
+                                    Аватар для видео
+                                </label>
+                                <select class="form-select" id="avatarId" name="avatar_id" required>
+                                    <option value="">Выберите аватар...</option>
+                                </select>
+                                <div class="form-text">
+                                    Аватар из HeyGen для видео
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-generate" data-module="trends">
+                            <i class="fas fa-play me-2"></i>
+                            Запустить анализ и генерацию
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Как это работает
+                </h6>
+            </div>
+            <div class="card-body">
+                <ol class="mb-0">
+                    <li class="mb-2">
+                        <strong>Парсинг конкурентов</strong><br>
+                        <small class="text-muted">Анализ постов в Instagram через Apify</small>
+                    </li>
+                    <li class="mb-2">
+                        <strong>Поиск вирального контента</strong><br>
+                        <small class="text-muted">Выделение самых популярных постов</small>
+                    </li>
+                    <li class="mb-2">
+                        <strong>Генерация текста</strong><br>
+                        <small class="text-muted">OpenAI создает текст на основе трендов</small>
+                    </li>
+                    <li class="mb-2">
+                        <strong>Озвучивание</strong><br>
+                        <small class="text-muted">ElevenLabs создает аудио</small>
+                    </li>
+                    <li>
+                        <strong>Создание видео</strong><br>
+                        <small class="text-muted">HeyGen создает финальное видео</small>
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0">
+                    <i class="fas fa-users me-2"></i>
+                    Конкуренты
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="competitorsList">
+                    <div class="text-center">
+                        <div class="spinner-border spinner-border-sm" role="status">
+                            <span class="visually-hidden">Загрузка...</span>
+                        </div>
+                        <p class="mt-2 mb-0">Загрузка списка конкурентов...</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{{ url_for('settings_page', module_name='trends') }}" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-plus me-2"></i>
+                        Управлять конкурентами
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadVoicesAndAvatars();
+    loadCompetitors();
+});
+
+async function loadVoicesAndAvatars() {
+    try {
+        // Загружаем голоса
+        const voicesResponse = await fetch('/api/module/trends/voices');
+        if (voicesResponse.ok) {
+            const voices = await voicesResponse.json();
+            const voiceSelect = document.getElementById('voiceId');
+            voiceSelect.innerHTML = '<option value="">Выберите голос...</option>';
+            voices.forEach(voice => {
+                const option = document.createElement('option');
+                option.value = voice.voice_id;
+                option.textContent = voice.name;
+                voiceSelect.appendChild(option);
+            });
+        }
+
+        // Загружаем аватары
+        const avatarsResponse = await fetch('/api/module/trends/avatars');
+        if (avatarsResponse.ok) {
+            const avatars = await avatarsResponse.json();
+            const avatarSelect = document.getElementById('avatarId');
+            avatarSelect.innerHTML = '<option value="">Выберите аватар...</option>';
+            avatars.forEach(avatar => {
+                const option = document.createElement('option');
+                option.value = avatar.avatar_id;
+                option.textContent = avatar.avatar_name;
+                avatarSelect.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading voices/avatars:', error);
+    }
+}
+
+async function loadCompetitors() {
+    try {
+        const response = await fetch('/api/competitors');
+        const competitors = await response.json();
+        
+        const container = document.getElementById('competitorsList');
+        
+        if (competitors.length === 0) {
+            container.innerHTML = `
+                <p class="text-muted text-center mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Конкуренты не добавлены
+                </p>
+            `;
+        } else {
+            container.innerHTML = competitors.map(comp => `
+                <div class="competitor-item">
+                    <div>
+                        <strong>@${comp.username}</strong>
+                        <br>
+                        <small class="text-muted">
+                            ${comp.platform} • 
+                            ${comp.last_checked ? 'Проверен: ' + new Date(comp.last_checked).toLocaleDateString() : 'Не проверялся'}
+                        </small>
+                    </div>
+                </div>
+            `).join('');
+        }
+    } catch (error) {
+        console.error('Error loading competitors:', error);
+        document.getElementById('competitorsList').innerHTML = `
+            <p class="text-danger text-center mb-0">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Ошибка загрузки
+            </p>
+        `;
+    }
+}
+</script>
+{% endblock %}

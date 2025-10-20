@@ -1,0 +1,518 @@
+{% extends "base.html" %}
+
+{% block title %}Модуль Трендвотчинга - Контент Завод{% endblock %}
+
+{% block extra_head %}
+<script>
+// Функции для работы с конкурентами
+
+async function loadCompetitors() {
+    console.log('🔄 ЗАГРУЗКА КОНКУРЕНТОВ - НАЧАЛО');
+    const container = document.getElementById('competitorsList');
+    const countEl = document.getElementById('competitorsCount');
+    
+    if (!container) {
+        console.error('❌ Элемент competitorsList не найден');
+        return;
+    }
+    
+    container.innerHTML = `
+        <div class="text-center text-primary p-3">
+            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+            <span>Загружаем конкурентов...</span>
+        </div>`;
+    
+    try {
+        console.log('📡 ОТПРАВЛЯЕМ ЗАПРОС К /api/competitors');
+        const response = await fetch('/api/competitors');
+        console.log('📡 ОТВЕТ ПОЛУЧЕН:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const competitors = await response.json();
+        console.log('📊 ДАННЫЕ ПОЛУЧЕНЫ:', competitors.length);
+
+        if (!Array.isArray(competitors) || competitors.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-muted p-3">
+                    <i class="fas fa-users fa-2x mb-2 text-muted"></i>
+                    <div>Конкуренты не добавлены</div>
+                </div>`;
+            if (countEl) countEl.textContent = '0';
+            return;
+        }
+
+        console.log('✅ РЕНДЕРИМ СПИСОК КОНКУРЕНТОВ В СТИЛЕ EXCEL');
+        container.innerHTML = `
+            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                <table class="table table-sm table-bordered table-hover mb-0" style="font-size: 14px;">
+                    <thead class="table-dark sticky-top">
+                        <tr>
+                            <th width="40" class="text-center">
+                                <input type="checkbox" id="selectAll" onchange="toggleAllCompetitors()" class="form-check-input">
+                            </th>
+                            <th width="60" class="text-center">№</th>
+                            <th>Конкурент</th>
+                            <th width="100" class="text-center">Платформа</th>
+                            <th width="80" class="text-center">Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${competitors.map((comp, index) => `
+                            <tr class="align-middle">
+                                <td class="text-center">
+                                    <input type="checkbox" value="${comp.username}" id="comp_${comp.id}" ${index === 0 ? 'checked' : ''} onchange="updateCompetitorCount()" class="form-check-input">
+                                </td>
+                                <td class="text-center fw-bold text-muted">${index + 1}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-user-circle me-2 text-primary"></i>
+                                        <span class="fw-bold">@${comp.username}</span>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-info">${comp.platform}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-success">Активен</span>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        if (countEl) countEl.textContent = competitors.length;
+        
+        console.log('✅ КОНКУРЕНТЫ ЗАГРУЖЕНЫ УСПЕШНО:', competitors.length);
+        
+    } catch (error) {
+        console.error('❌ ОШИБКА:', error);
+        container.innerHTML = `
+            <div class="text-center text-danger p-3">
+                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                <div>Ошибка загрузки</div>
+                <small>${error.message}</small>
+            </div>`;
+        if (countEl) countEl.textContent = '0';
+    }
+}
+
+// Функции для работы с таблицей конкурентов
+function toggleAllCompetitors() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('#competitorsList input[type="checkbox"]:not(#selectAll)');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    
+    updateCompetitorCount();
+}
+
+function updateCompetitorCount() {
+    const checkedBoxes = document.querySelectorAll('#competitorsList input[type="checkbox"]:not(#selectAll):checked');
+    const countEl = document.getElementById('competitorsCount');
+    const selectAll = document.getElementById('selectAll');
+    
+    if (countEl) {
+        countEl.textContent = checkedBoxes.length;
+    }
+    
+    // Обновляем состояние "Выбрать всех"
+    if (selectAll) {
+        const allBoxes = document.querySelectorAll('#competitorsList input[type="checkbox"]:not(#selectAll)');
+        selectAll.checked = checkedBoxes.length === allBoxes.length;
+        selectAll.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < allBoxes.length;
+    }
+}
+
+// Функция сбора рилсов конкурентов с увеличенным таймаутом
+async function collectReels(event) {
+    event.preventDefault();
+    console.log('🎬 НАЧИНАЕМ СБОР РИЛСОВ КОНКУРЕНТОВ');
+    
+    const button = document.getElementById('collectButton');
+    const statusDiv = document.getElementById('collectStatus');
+    const reelsCount = document.getElementById('reelsCount').value;
+    
+    // Получаем выбранных конкурентов
+    const selectedCompetitors = [];
+    const checkboxes = document.querySelectorAll('#competitorsList input[type="checkbox"]:not(#selectAll):checked');
+    
+    checkboxes.forEach(checkbox => {
+        selectedCompetitors.push(checkbox.value);
+    });
+    
+    if (selectedCompetitors.length === 0) {
+        statusDiv.innerHTML = `
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Выберите хотя бы одного конкурента
+            </div>`;
+        return;
+    }
+    
+    console.log('📊 ВЫБРАННЫЕ КОНКУРЕНТЫ:', selectedCompetitors);
+    console.log('📊 КОЛИЧЕСТВО РИЛСОВ:', reelsCount);
+    
+    // Блокируем кнопку и показываем статус
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Собираем рилсы...';
+    
+    statusDiv.innerHTML = `
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Начинаем сбор рилсов для ${selectedCompetitors.length} конкурентов...
+            <br><small class="text-muted">Это может занять несколько минут</small>
+        </div>`;
+    
+    try {
+        console.log('📡 ОТПРАВЛЯЕМ ЗАПРОС НА СБОР РИЛСОВ');
+        
+        // Создаем AbortController для контроля таймаута
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 минут таймаут
+        
+        const response = await fetch('/api/trends/collect-reels', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                competitors: selectedCompetitors,
+                reels_count: parseInt(reelsCount)
+            }),
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        console.log('📡 ОТВЕТ ПОЛУЧЕН:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        console.log('📊 РЕЗУЛЬТАТ СБОРА:', result);
+        
+        if (result.success) {
+            statusDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Успешно собрано ${result.total_count || result.total_reels || 0} рилсов от ${selectedCompetitors.length} конкурентов
+                    <br><small class="text-muted">Виральных: ${result.viral_count || 0}</small>
+                </div>`;
+            
+            // Активируем следующий шаг
+            activateStep2();
+            
+            // Обновляем статистику
+            updateReelsStats(result);
+            
+        } else {
+            throw new Error(result.error || 'Неизвестная ошибка');
+        }
+        
+    } catch (error) {
+        console.error('❌ ОШИБКА СБОРА РИЛСОВ:', error);
+        
+        let errorMessage = error.message;
+        if (error.name === 'AbortError') {
+            errorMessage = 'Превышено время ожидания (5 минут). Попробуйте уменьшить количество рилсов.';
+        }
+        
+        statusDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Ошибка сбора рилсов: ${errorMessage}
+                <br><small class="text-muted">Попробуйте уменьшить количество рилсов или проверить подключение</small>
+            </div>`;
+    } finally {
+        // Разблокируем кнопку
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-cloud-download-alt me-2"></i>Собрать рилсы конкурентов';
+    }
+}
+
+// Функция обновления статистики рилсов
+function updateReelsStats(result) {
+    const totalReels = document.getElementById('totalReels');
+    const viralReels = document.getElementById('viralReels');
+    
+    if (totalReels) {
+        totalReels.textContent = result.total_count || result.total_reels || 0;
+    }
+    
+    if (viralReels) {
+        viralReels.textContent = result.viral_count || 0;
+    }
+}
+
+// Функция активации второго шага
+function activateStep2() {
+    const step2 = document.getElementById('step2');
+    if (step2) {
+        step2.classList.remove('step-disabled');
+        step2.classList.add('step-active');
+        console.log('✅ Шаг 2 активирован');
+    }
+}
+
+// Функции для сортировки (заглушки)
+function sortByViews() {
+    console.log('📊 Сортировка по просмотрам');
+    // TODO: Реализовать сортировку
+}
+
+function sortByLikes() {
+    console.log('📊 Сортировка по лайкам');
+    // TODO: Реализовать сортировку
+}
+
+// Автозагрузка при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 DOM загружен, запускаем загрузку конкурентов');
+    loadCompetitors();
+});
+</script>
+
+<style>
+    /* Улучшенные стили для блоков-шагов */
+    .progress-step {
+        margin-bottom: 30px !important;
+        box-shadow: 0 8px 32px rgba(0, 64, 39, 0.12) !important;
+        border-radius: 16px !important;
+        border: 1px solid rgba(0, 64, 39, 0.08) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .progress-step:hover {
+        box-shadow: 0 12px 40px rgba(0, 64, 39, 0.18) !important;
+        transform: translateY(-2px) !important;
+    }
+    
+    .progress-step.step-active {
+        border-color: var(--gsr-accent) !important;
+        box-shadow: 0 8px 32px rgba(39, 145, 52, 0.15) !important;
+    }
+    
+    /* Отступы для контейнера */
+    .step-container {
+        padding: 0 15px;
+        margin-top: 40px; /* Отступ между зеленой плашкой и блоками */
+    }
+    
+    /* Улучшенные отступы внутри блоков */
+    .progress-step .card-body,
+    .progress-step {
+        padding: 30px !important;
+    }
+    
+    /* Красивые тени для кнопок */
+    .btn-gsr-accent {
+        box-shadow: 0 4px 16px rgba(39, 145, 52, 0.3) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .btn-gsr-accent:hover {
+        box-shadow: 0 6px 20px rgba(39, 145, 52, 0.4) !important;
+        transform: translateY(-1px) !important;
+    }
+    
+    /* Улучшенный логотип GSR */
+    .gsr-logo {
+        height: 90px !important;
+        width: 90px !important;
+        border-radius: 50% !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        padding: 18px !important;
+        box-shadow: 0 6px 20px rgba(255, 255, 255, 0.25) !important;
+        transition: all 0.3s ease !important;
+        border: 2px solid rgba(255, 255, 255, 0.3) !important;
+        object-fit: contain !important;
+    }
+    
+    .gsr-logo:hover {
+        transform: scale(1.08) !important;
+        box-shadow: 0 8px 25px rgba(255, 255, 255, 0.4) !important;
+        border-color: rgba(255, 255, 255, 0.5) !important;
+    }
+    
+    /* Анимация появления логотипа */
+    .gsr-logo {
+        animation: logoGlow 2s ease-in-out infinite alternate !important;
+    }
+    
+    @keyframes logoGlow {
+        0% { box-shadow: 0 6px 20px rgba(255, 255, 255, 0.25); }
+        100% { box-shadow: 0 8px 25px rgba(255, 255, 255, 0.35); }
+    }
+    
+    /* Стили для Excel-таблицы */
+    .table-responsive {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .table thead th {
+        background-color: #343a40 !important;
+        color: white !important;
+        border-color: #495057 !important;
+        font-weight: 600;
+        font-size: 13px;
+        padding: 8px 12px;
+    }
+    
+    .table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+    
+    .table tbody tr:hover {
+        background-color: #f8f9fa !important;
+    }
+    
+    .table tbody td {
+        padding: 8px 12px;
+        vertical-align: middle;
+        border-color: #dee2e6;
+    }
+    
+    .form-check-input {
+        margin: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card-gsr">
+            <div class="card-body text-center gsr-bg-gradient text-white" style="border-radius: 16px 16px 0 0;">
+                <img src="/static/7411193.png" alt="GSR" class="gsr-logo mb-3">
+                <h1 class="gsr-heading mb-2">
+                    <i class="fas fa-chart-line me-2"></i>Модуль Трендвотчинга
+                </h1>
+                <p class="mb-0 fs-5">Анализ трендов и создание вирусного контента на основе данных конкурентов</p>
+                <a href="{{ url_for('settings_page', module_name='trends') }}" class="btn btn-outline-light btn-lg mt-3">
+                    <i class="fas fa-cog me-2"></i>Настройки API
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row step-container">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-active" id="step1">
+            <div class="d-flex align-items-center mb-4">
+                <div class="step-number-gsr">1</div>
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center mb-2">
+                        <img src="/static/7411193.png" alt="GSR" class="gsr-logo me-3" style="height: 40px; width: 40px; border-radius: 50%; background: rgba(0, 64, 39, 0.1); padding: 8px;">
+                        <h4 class="gsr-heading mb-0 gsr-text-primary">Сбор рилсов</h4>
+                    </div>
+                    <p class="text-muted mb-0">Укажите конкурентов и лимит, чтобы собрать свежие рилсы</p>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="reelsCount" class="form-label fw-bold gsr-text-secondary">
+                    <i class="fas fa-hashtag me-2"></i>Количество рилсов на конкурента
+                </label>
+                <select class="form-select form-select-lg" id="reelsCount" 
+                        style="border: 2px solid rgba(0, 64, 39, 0.2); border-radius: 12px;">
+                    <option value="10">10</option>
+                    <option value="20" selected>20</option>
+                    <option value="30">30</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+            
+            <div class="mb-4">
+                <label class="form-label fw-bold gsr-text-secondary">
+                    <i class="fas fa-users me-2"></i>Конкуренты для анализа
+                </label>
+                <div id="competitorsList" class="p-3 border rounded bg-light" style="max-height: 200px; overflow-y: auto;">
+                    <div class="text-center text-muted">
+                        <div class="spinner-border spinner-border-sm" role="status"></div>
+                        <div class="mt-2">Загружаем конкурентов…</div>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <button class="btn btn-sm btn-outline-primary" onclick="loadCompetitors()">
+                        <i class="fas fa-refresh me-1"></i>Обновить список
+                    </button>
+                </div>
+                <div class="mt-2">
+                    <small class="text-muted">
+                        <span id="competitorsCount">0</span> конкурентов загружено
+                    </small>
+                </div>
+                <div class="form-text mt-2">
+                    <a href="{{ url_for('settings_page', module_name='trends') }}" class="link-success">
+                        <i class="fas fa-cog me-1"></i>Добавить конкурентов
+                    </a>
+                </div>
+            </div>
+
+            <button class="btn btn-gsr-accent btn-lg" id="collectButton" onclick="collectReels(event)">
+                <i class="fas fa-cloud-download-alt me-2"></i>Собрать рилсы конкурентов
+            </button>
+            
+            <div id="collectStatus" class="mt-3"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Остальные шаги остаются без изменений -->
+<div class="row step-container">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-disabled" id="step2">
+            <div class="d-flex align-items-center mb-4">
+                <div class="step-number-gsr">2</div>
+                <div>
+                    <h4 class="gsr-heading mb-1 gsr-text-primary">Отбор рилсов</h4>
+                    <p class="text-muted mb-0">Выберите лучший рилс для транскрибации</p>
+                </div>
+            </div>
+            
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center justify-content-between p-3 bg-light border rounded">
+                        <span class="fw-bold">Всего:</span>
+                        <span class="badge bg-primary fs-6" id="totalReels">0</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center justify-content-between p-3 bg-light border rounded">
+                        <span class="fw-bold">Виральных (>30k):</span>
+                        <span class="badge bg-success fs-6" id="viralReels">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2 mb-3">
+                <button class="btn btn-outline-primary" onclick="sortByViews()">
+                    <i class="fas fa-eye me-1"></i>Просмотры
+                </button>
+                <button class="btn btn-outline-danger" onclick="sortByLikes()">
+                    <i class="fas fa-heart me-1"></i>Лайки
+                </button>
+            </div>
+            
+            <div id="reelsList" class="row g-3">
+                <div class="col-12 text-center text-muted p-4">
+                    <i class="fas fa-video fa-2x mb-2"></i>
+                    <div>Сначала соберите рилсы конкурентов</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

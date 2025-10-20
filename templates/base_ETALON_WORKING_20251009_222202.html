@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>{% block title %}GSR Content Factory{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/favicon.ico">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- GSR Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    
+    <!-- GSR Corporate Styles -->
+    <style>
+        :root {
+            /* GSR Корпоративная палитра */
+            --gsr-primary: #004027;     /* Темно-зеленый */
+            --gsr-secondary: #396225;   /* Средний зеленый */
+            --gsr-accent: #279134;      /* Яркий зеленый */
+            --gsr-light: #F2F2EB;       /* Светлый */
+            --gsr-orange: #EB8000;      /* Акцентный оранжевый */
+            
+            /* Градиенты */
+            --gsr-gradient-primary: linear-gradient(135deg, #004027 0%, #396225 50%, #279134 100%);
+            --gsr-gradient-accent: linear-gradient(45deg, #279134, #EB8000);
+            
+            /* Шрифты */
+            --font-heading: 'Russo One', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+        
+        body {
+            font-family: var(--font-body);
+            background: var(--gsr-light);
+            color: #333;
+        }
+        
+        .gsr-bg-primary { background: var(--gsr-primary) !important; }
+        .gsr-bg-secondary { background: var(--gsr-secondary) !important; }
+        .gsr-bg-accent { background: var(--gsr-accent) !important; }
+        .gsr-bg-gradient { background: var(--gsr-gradient-primary) !important; }
+        .gsr-bg-gradient-accent { background: var(--gsr-gradient-accent) !important; }
+        
+        .gsr-text-primary { color: var(--gsr-primary) !important; }
+        .gsr-text-secondary { color: var(--gsr-secondary) !important; }
+        .gsr-text-accent { color: var(--gsr-accent) !important; }
+        .gsr-text-orange { color: var(--gsr-orange) !important; }
+        
+        .gsr-heading {
+            font-family: var(--font-heading);
+            font-weight: 400;
+        }
+        
+        .gsr-logo {
+            height: 40px;
+            width: auto;
+        }
+        
+        .btn-gsr-primary {
+            background: var(--gsr-primary);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 12px 24px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-gsr-primary:hover {
+            background: var(--gsr-secondary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 64, 39, 0.3);
+        }
+        
+        .btn-gsr-accent {
+            background: var(--gsr-gradient-accent);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 12px 24px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-gsr-accent:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(235, 128, 0, 0.3);
+        }
+        
+        .card-gsr {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 64, 39, 0.1);
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .card-gsr:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(0, 64, 39, 0.15);
+        }
+        
+        .navbar-gsr {
+            background: var(--gsr-gradient-primary) !important;
+            padding: 1rem 0;
+        }
+        
+        .navbar-gsr .navbar-brand {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            color: white !important;
+            text-decoration: none;
+        }
+        
+        .navbar-gsr .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        
+        .navbar-gsr .nav-link:hover {
+            color: white !important;
+        }
+        
+        .navbar-gsr .dropdown-menu {
+            background: white;
+            border: none;
+            box-shadow: 0 8px 32px rgba(0, 64, 39, 0.15);
+        }
+        
+        .navbar-gsr .dropdown-item:hover {
+            background: var(--gsr-light);
+            color: var(--gsr-primary);
+        }
+        
+        .step-number-gsr {
+            background: var(--gsr-gradient-accent);
+            color: white;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            margin-right: 16px;
+        }
+        
+        .status-indicator-gsr {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-pending-gsr { background-color: var(--gsr-orange); }
+        .status-processing-gsr { 
+            background: var(--gsr-gradient-accent);
+            animation: pulse-gsr 2s infinite;
+        }
+        .status-completed-gsr { background-color: var(--gsr-accent); }
+        .status-error-gsr { background-color: #dc3545; }
+        
+        @keyframes pulse-gsr {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .progress-gsr {
+            height: 8px;
+            background-color: rgba(0, 64, 39, 0.1);
+            border-radius: 4px;
+        }
+        
+        .progress-bar-gsr {
+            background: var(--gsr-gradient-accent);
+            border-radius: 4px;
+        }
+        
+        /* Override Bootstrap colors with GSR palette */
+        .btn-primary {
+            background: var(--gsr-primary);
+            border-color: var(--gsr-primary);
+        }
+        
+        .btn-primary:hover {
+            background: var(--gsr-secondary);
+            border-color: var(--gsr-secondary);
+        }
+        
+        .text-primary {
+            color: var(--gsr-primary) !important;
+        }
+        
+        .bg-primary {
+            background: var(--gsr-gradient-primary) !important;
+        }
+    </style>
+    
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- GSR Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-gsr">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+                <img src="/static/7411193.png" alt="GSR" class="gsr-logo me-3">
+                Контент Завод
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">
+                            <i class="fas fa-home me-1"></i>Главная
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-cogs me-1"></i>Модули
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/module/trends">
+                                <i class="fas fa-chart-line me-2 gsr-text-accent"></i>Трендвотчинг
+                            </a></li>
+                            <li><a class="dropdown-item" href="/module/vacancies">
+                                <i class="fas fa-briefcase me-2 gsr-text-accent"></i>Вакансии
+                            </a></li>
+                            <li><a class="dropdown-item" href="/module/experts">
+                                <i class="fas fa-user-graduate me-2 gsr-text-accent"></i>Эксперты
+                            </a></li>
+                            <li><a class="dropdown-item" href="/module/monitoring">
+                                <i class="fas fa-chart-pie me-2 gsr-text-accent"></i>Мониторинг
+                            </a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-cog me-1"></i>Настройки
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('settings_page', module_name='trends') }}">
+                                <i class="fas fa-chart-line me-2 gsr-text-orange"></i>Трендвотчинг
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('settings_page', module_name='vacancies') }}">
+                                <i class="fas fa-briefcase me-2 gsr-text-orange"></i>Вакансии
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('settings_page', module_name='experts') }}">
+                                <i class="fas fa-user-graduate me-2 gsr-text-orange"></i>Эксперты
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-3">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="container my-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="progressToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header gsr-bg-primary text-white">
+                <i class="fas fa-cog fa-spin me-2"></i>
+                <strong class="me-auto">Генерация видео</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body">
+                <div id="progressText">Инициализация...</div>
+                <div class="progress mt-2 progress-gsr" style="height: 8px;">
+                    <div id="progressBar" class="progress-bar progress-bar-gsr" role="progressbar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div class="modal fade" id="resultModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content card-gsr">
+                <div class="modal-header gsr-bg-gradient text-white">
+                    <h5 class="modal-title gsr-heading">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Результат генерации
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="resultContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-gsr-primary" data-bs-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GSR Footer -->
+    <footer class="gsr-bg-primary text-white py-4 mt-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                        <img src="/static/7411193.png" alt="GSR" class="gsr-logo me-3">
+                        <div>
+                            <h6 class="gsr-heading mb-0">Контент Завод</h6>
+                            <small class="text-white-50">Создание контента нового поколения</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">&copy; 2025 GSR. Все права защищены.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/pipeline.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

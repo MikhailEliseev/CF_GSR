@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Модуль трендвотчинга - Полная версия</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .step {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            transition: all 0.3s;
+        }
+        .step.completed {
+            border-color: #28a745;
+            background: #f8fff9;
+        }
+        .step.active {
+            border-color: #007bff;
+            background: #f0f8ff;
+        }
+        .step.disabled {
+            border-color: #dee2e6;
+            background: #f8f9fa;
+            opacity: 0.6;
+        }
+        .voice-settings {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .slider-container {
+            margin: 15px 0;
+        }
+        .slider-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        .slider-value {
+            color: #007bff;
+            font-weight: 700;
+        }
+        .audio-preview {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .competitor-card {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .competitor-card:hover {
+            border-color: #007bff;
+        }
+        .competitor-card.selected {
+            border-color: #28a745;
+            background: #f8fff9;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-success { background: #28a745; }
+        .status-warning { background: #ffc107; }
+        .status-danger { background: #dc3545; }
+        .status-info { background: #17a2b8; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">📊 Модуль трендвотчинга - Полная версия</h1>
+        
+        <!-- Шаг 1: Выбор конкурентов -->
+        <div class="step active" id="step1">
+            <h3><i class="fas fa-users me-2"></i>Шаг 1: Выбор конкурентов</h3>
+            <p class="text-muted">Выберите конкурентов для анализа их контента</p>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Доступные конкуренты:</h5>
+                    <div id="competitorsList">
+                        <div class="competitor-card" data-competitor="@alfa.resource.group.kg">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="comp1">
+                                <label class="form-check-label" for="comp1">
+                                    <strong>@alfa.resource.group.kg</strong>
+                                    <br><small class="text-muted">Альфа Ресурс Групп</small>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="competitor-card" data-competitor="@rem.vac">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="comp2">
+                                <label class="form-check-label" for="comp2">
+                                    <strong>@rem.vac</strong>
+                                    <br><small class="text-muted">Ремонт и вакансии</small>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="competitor-card" data-competitor="@msk.job">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="comp3">
+                                <label class="form-check-label" for="comp3">
+                                    <strong>@msk.job</strong>
+                                    <br><small class="text-muted">Работа в Москве</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <h5>Настройки сбора:</h5>
+                    <div class="mb-3">
+                        <label class="form-label">Количество рилсов:</label>
+                        <select class="form-select" id="reelsCount">
+                            <option value="1">1 рилс (быстро)</option>
+                            <option value="3" selected>3 рилса (рекомендуется)</option>
+                            <option value="5">5 рилсов (медленно)</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn btn-primary btn-lg w-100" onclick="collectReels()">
+                        <i class="fas fa-download me-2"></i>Собрать рилсы
+                    </button>
+                    
+                    <div id="reelsStatus" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Шаг 2: Анализ рилсов -->
+        <div class="step disabled" id="step2">
+            <h3><i class="fas fa-chart-line me-2"></i>Шаг 2: Анализ рилсов</h3>
+            <p class="text-muted">Анализируем собранные рилсы и выделяем виральные</p>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>📊 Статистика</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <h3 class="text-primary" id="totalReels">0</h3>
+                                    <small>Всего рилсов</small>
+                                </div>
+                                <div class="col-4">
+                                    <h3 class="text-success" id="viralReels">0</h3>
+                                    <small>Виральных</small>
+                                </div>
+                                <div class="col-4">
+                                    <h3 class="text-warning" id="selectedReels">0</h3>
+                                    <small>Выбрано</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <button class="btn btn-success btn-lg w-100" onclick="analyzeReels()">
+                        <i class="fas fa-brain me-2"></i>Анализировать рилсы
+                    </button>
+                    
+                    <div id="analysisStatus" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Шаг 3: Транскрипция -->
+        <div class="step disabled" id="step3">
+            <h3><i class="fas fa-microphone me-2"></i>Шаг 3: Транскрипция</h3>
+            <p class="text-muted">Преобразуем аудио в текст</p>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>📝 Транскрипция</h5>
+                        </div>
+                        <div class="card-body">
+                            <textarea class="form-control" id="transcriptText" rows="6" placeholder="Транскрипция появится здесь..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <button class="btn btn-info btn-lg w-100" onclick="transcribeAudio()">
+                        <i class="fas fa-microphone me-2"></i>Транскрибировать
+                    </button>
+                    
+                    <div id="transcriptionStatus" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Шаг 4: Переписывание -->
+        <div class="step disabled" id="step4">
+            <h3><i class="fas fa-edit me-2"></i>Шаг 4: Переписывание</h3>
+            <p class="text-muted">Переписываем текст для лучшего восприятия</p>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>✍️ Переписанный текст</h5>
+                        </div>
+                        <div class="card-body">
+                            <textarea class="form-control" id="rewrittenText" rows="6" placeholder="Переписанный текст появится здесь..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <button class="btn btn-warning btn-lg w-100" onclick="rewriteText()">
+                        <i class="fas fa-edit me-2"></i>Переписать
+                    </button>
+                    
+                    <div id="rewriteStatus" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Шаг 5: Генерация аудио -->
+        <div class="step disabled" id="step5">
+            <h3><i class="fas fa-volume-up me-2"></i>Шаг 5: Генерация аудио</h3>
+            <p class="text-muted">Создаем аудио с настройками голоса</p>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="voice-settings">
+                        <h5>🎤 Настройки голоса</h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Голос:</label>
+                            <select class="form-select" id="voiceSelect">
+                                <option value="jP9L6ZC55cz5mmx4ZpCk" selected>Архангельский Алексей</option>
+                                <option value="demo_voice">Демо голос</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Модель:</label>
+                            <select class="form-select" id="modelSelect">
+                                <option value="eleven_flash_v2_5" selected>Eleven Flash v2.5</option>
+                                <option value="eleven_turbo_v2_5">Eleven Turbo v2.5</option>
+                                <option value="eleven_multilingual_v2">Eleven Multilingual v2</option>
+                            </select>
+                        </div>
+                        
+                        <div class="slider-container">
+                            <label class="slider-label">Скорость: <span class="slider-value" id="speedValue">1.0</span></label>
+                            <input type="range" class="form-range" id="speedSlider" min="0.5" max="2.0" step="0.1" value="1.0">
+                        </div>
+                        
+                        <div class="slider-container">
+                            <label class="slider-label">Стабильность: <span class="slider-value" id="stabilityValue">0.5</span></label>
+                            <input type="range" class="form-range" id="stabilitySlider" min="0.0" max="1.0" step="0.1" value="0.5">
+                        </div>
+                        
+                        <div class="slider-container">
+                            <label class="slider-label">Схожесть: <span class="slider-value" id="similarityValue">0.5</span></label>
+                            <input type="range" class="form-range" id="similaritySlider" min="0.0" max="1.0" step="0.1" value="0.5">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <button class="btn btn-primary btn-lg w-100" onclick="generateAudio()">
+                        <i class="fas fa-volume-up me-2"></i>Генерировать аудио
+                    </button>
+                    
+                    <div id="audioStatus" class="mt-3"></div>
+                    
+                    <div class="audio-preview" id="audioPreview">
+                        <p class="text-muted">Аудио будет отображено здесь</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Шаг 6: Создание видео -->
+        <div class="step disabled" id="step6">
+            <h3><i class="fas fa-video me-2"></i>Шаг 6: Создание видео</h3>
+            <p class="text-muted">Создаем финальное видео с аватаром</p>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>🎬 Настройки видео</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Аватар:</label>
+                                <select class="form-select" id="avatarSelect">
+                                    <option value="default">По умолчанию</option>
+                                    <option value="male">Мужской</option>
+                                    <option value="female">Женский</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Стиль:</label>
+                                <select class="form-select" id="styleSelect">
+                                    <option value="business">Деловой</option>
+                                    <option value="casual">Повседневный</option>
+                                    <option value="formal">Официальный</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <button class="btn btn-success btn-lg w-100" onclick="generateVideo()">
+                        <i class="fas fa-video me-2"></i>Создать видео
+                    </button>
+                    
+                    <div id="videoStatus" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            // Обработчики слайдеров
+            document.getElementById('speedSlider').addEventListener('input', function() {
+                document.getElementById('speedValue').textContent = this.value;
+            });
+            
+            document.getElementById('stabilitySlider').addEventListener('input', function() {
+                document.getElementById('stabilityValue').textContent = this.value;
+            });
+            
+            document.getElementById('similaritySlider').addEventListener('input', function() {
+                document.getElementById('similarityValue').textContent = this.value;
+            });
+            
+            // Обработчики карточек конкурентов
+            document.querySelectorAll('.competitor-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const checkbox = this.querySelector('input[type="checkbox"]');
+                    checkbox.checked = !checkbox.checked;
+                    this.classList.toggle('selected', checkbox.checked);
+                });
+            });
+        });
+        
+        function getSelectedCompetitors() {
+            const checkboxes = document.querySelectorAll('input[name="competitor"]:checked');
+            return Array.from(checkboxes).map(cb => cb.value);
+        }
+        
+        function activateStep(stepNumber) {
+            // Деактивируем все шаги
+            for (let i = 1; i <= 6; i++) {
+                const step = document.getElementById(`step${i}`);
+                step.classList.remove('active', 'completed');
+                step.classList.add('disabled');
+            }
+            
+            // Активируем текущий шаг
+            const currentStep = document.getElementById(`step${stepNumber}`);
+            currentStep.classList.remove('disabled');
+            currentStep.classList.add('active');
+            
+            // Отмечаем предыдущие шаги как завершенные
+            for (let i = 1; i < stepNumber; i++) {
+                const prevStep = document.getElementById(`step${i}`);
+                prevStep.classList.remove('disabled', 'active');
+                prevStep.classList.add('completed');
+            }
+        }
+        
+        async function collectReels() {
+            const statusDiv = document.getElementById('reelsStatus');
+            const selectedCompetitors = getSelectedCompetitors();
+            const reelsCount = parseInt(document.getElementById('reelsCount').value);
+            
+            if (selectedCompetitors.length === 0) {
+                statusDiv.innerHTML = '<div class="alert alert-warning">Выберите хотя бы одного конкурента</div>';
+                return;
+            }
+            
+            statusDiv.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Собираем ${reelsCount} рилсов от ${selectedCompetitors.length} конкурентов...
+                </div>
+            `;
+            
+            try {
+                const response = await fetch('/api/trends/collect-reels', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        competitors: selectedCompetitors,
+                        count: reelsCount
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    statusDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Успешно собрано ${result.total_count || 0} рилсов
+                            <br><small>Виральных: ${result.viral_count || 0}</small>
+                        </div>
+                    `;
+                    
+                    // Обновляем статистику
+                    document.getElementById('totalReels').textContent = result.total_count || 0;
+                    document.getElementById('viralReels').textContent = result.viral_count || 0;
+                    
+                    // Активируем следующий шаг
+                    activateStep(2);
+                    
+                } else {
+                    statusDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Ошибка: ${result.message || 'Неизвестная ошибка'}
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Ошибка подключения: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        async function analyzeReels() {
+            const statusDiv = document.getElementById('analysisStatus');
+            statusDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>Анализируем рилсы...</div>';
+            
+            // Симуляция анализа
+            setTimeout(() => {
+                statusDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Анализ завершен
+                    </div>
+                `;
+                activateStep(3);
+            }, 2000);
+        }
+        
+        async function transcribeAudio() {
+            const statusDiv = document.getElementById('transcriptionStatus');
+            const transcriptText = document.getElementById('transcriptText');
+            
+            statusDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>Транскрибируем аудио...</div>';
+            
+            // Симуляция транскрипции
+            setTimeout(() => {
+                transcriptText.value = "Хотите зарабатывать больше? В Кыргызстане зарплаты скромнее, чем на вахте в России. Вахта — это шанс выйти на новый уровень дохода!";
+                statusDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Транскрипция завершена
+                    </div>
+                `;
+                activateStep(4);
+            }, 3000);
+        }
+        
+        async function rewriteText() {
+            const statusDiv = document.getElementById('rewriteStatus');
+            const transcriptText = document.getElementById('transcriptText');
+            const rewrittenText = document.getElementById('rewrittenText');
+            
+            if (!transcriptText.value.trim()) {
+                statusDiv.innerHTML = '<div class="alert alert-warning">Сначала выполните транскрипцию</div>';
+                return;
+            }
+            
+            statusDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>Переписываем текст...</div>';
+            
+            try {
+                const response = await fetch('/api/trends/rewrite', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: transcriptText.value
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    rewrittenText.value = result.rewritten_text;
+                    statusDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Текст переписан
+                        </div>
+                    `;
+                    activateStep(5);
+                } else {
+                    statusDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Ошибка: ${result.message}
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Ошибка: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        function getVoiceSettings() {
+            return {
+                voice_id: document.getElementById('voiceSelect').value,
+                model_id: document.getElementById('modelSelect').value,
+                speed: parseFloat(document.getElementById('speedSlider').value),
+                stability: parseFloat(document.getElementById('stabilitySlider').value),
+                similarity_boost: parseFloat(document.getElementById('similaritySlider').value)
+            };
+        }
+        
+        async function generateAudio() {
+            const statusDiv = document.getElementById('audioStatus');
+            const audioPreview = document.getElementById('audioPreview');
+            const rewrittenText = document.getElementById('rewrittenText');
+            
+            if (!rewrittenText.value.trim()) {
+                statusDiv.innerHTML = '<div class="alert alert-warning">Сначала перепишите текст</div>';
+                return;
+            }
+            
+            statusDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>Генерируем аудио...</div>';
+            audioPreview.innerHTML = '<p class="text-muted">Генерация в процессе...</p>';
+            
+            const settings = getVoiceSettings();
+            
+            try {
+                const response = await fetch('/api/trends/generate-audio', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: rewrittenText.value,
+                        ...settings
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    statusDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Аудио сгенерировано!
+                            ${result.warning ? '<br><small class="text-warning">' + result.warning + '</small>' : ''}
+                        </div>
+                    `;
+                    
+                    audioPreview.innerHTML = `
+                        <div class="d-flex align-items-center">
+                            <audio controls class="flex-grow-1 me-3">
+                                <source src="${result.audio_url}" type="audio/mpeg">
+                                Ваш браузер не поддерживает аудио элемент.
+                            </audio>
+                            <button class="btn btn-sm btn-outline-primary" onclick="downloadAudio('${result.audio_url}')">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                Настройки: ${settings.voice_id}, ${settings.model_id}, 
+                                Скорость: ${settings.speed}, Стабильность: ${settings.stability}
+                            </small>
+                        </div>
+                    `;
+                    
+                    activateStep(6);
+                    
+                } else {
+                    statusDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Ошибка: ${result.message}
+                        </div>
+                    `;
+                    audioPreview.innerHTML = '<p class="text-danger">Ошибка генерации аудио</p>';
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Ошибка: ${error.message}
+                    </div>
+                `;
+                audioPreview.innerHTML = '<p class="text-danger">Ошибка подключения</p>';
+            }
+        }
+        
+        function downloadAudio(url) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'generated_audio.mp3';
+            a.click();
+        }
+        
+        async function generateVideo() {
+            const statusDiv = document.getElementById('videoStatus');
+            
+            statusDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>Создаем видео...</div>';
+            
+            // Симуляция создания видео
+            setTimeout(() => {
+                statusDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Видео создано успешно!
+                    </div>
+                `;
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

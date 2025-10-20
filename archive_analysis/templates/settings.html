@@ -1,0 +1,467 @@
+{% extends "base.html" %}
+
+{% block title %}Настройки {{ module_name|title }} - Контент Завод{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                {% if module_name == 'trends' %}
+                    <i class="fas fa-chart-line text-primary me-2"></i>
+                {% elif module_name == 'vacancies' %}
+                    <i class="fas fa-briefcase text-success me-2"></i>
+                {% elif module_name == 'experts' %}
+                    <i class="fas fa-user-graduate text-warning me-2"></i>
+                {% endif %}
+                Настройки модуля {{ module_name|title }}
+            </h2>
+            <a href="{{ url_for('module_page', module_name=module_name) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>К модулю
+            </a>
+        </div>
+    </div>
+</div>
+
+<form id="settingsForm">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- API Ключи -->
+            <div class="card settings-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-key me-2"></i>
+                        API Ключи
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="openaiKey" class="form-label">
+                                    <i class="fab fa-openai me-2"></i>
+                                    OpenAI API Key
+                                </label>
+                                <input type="text" class="form-control" id="openaiKey" name="openai_api_key" 
+                                       placeholder="sk-..." value="{{ settings.get_api_keys().get('openai_api_key', '') }}">
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="masterPrompt" class="form-label">
+                                    <i class="fas fa-magic me-2"></i>
+                                    Мастер-промпт для генерации текстов
+                                </label>
+                                <textarea class="form-control" id="masterPrompt" name="master_prompt" rows="6"
+                                          placeholder="Введите мастер-промпт для создания текстов вакансий...">{{ settings.master_prompt or 'Ты эксперт по написанию привлекательных текстов для видео о вакансиях. Создавай живые, естественные тексты длительностью 40-60 секунд (120-150 слов). Избегай сложных терминов, делай акцент на преимуществах работы, используй простые предложения и начинай с привлекающего внимания крючка.' }}</textarea>
+                                <div class="form-text">
+                                    Этот промпт будет использоваться для генерации текстов вместо ассистента OpenAI
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="elevenLabsKey" class="form-label">
+                                    <i class="fas fa-microphone me-2"></i>
+                                    ElevenLabs API Key
+                                </label>
+                                <input type="text" class="form-control" id="elevenLabsKey" name="elevenlabs_api_key" 
+                                       placeholder="..." value="{{ settings.get_api_keys().get('elevenlabs_api_key', '') }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="heygenKey" class="form-label">
+                                    <i class="fas fa-video me-2"></i>
+                                    HeyGen API Key
+                                </label>
+                                <input type="text" class="form-control" id="heygenKey" name="heygen_api_key" 
+                                       placeholder="..." value="{{ settings.get_api_keys().get('heygen_api_key', '') }}">
+                            </div>
+                        </div>
+                        {% if module_name == 'trends' %}
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="apifyKey" class="form-label">
+                                    <i class="fas fa-spider me-2"></i>
+                                    Apify API Key
+                                </label>
+                                <input type="text" class="form-control" id="apifyKey" name="apify_api_key" 
+                                       placeholder="..." value="{{ settings.get_api_keys().get('apify_api_key', '') }}">
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- OpenAI Assistant -->
+            <div class="card settings-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-robot me-2"></i>
+                        OpenAI Assistant
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="assistantId" class="form-label">
+                            Assistant ID
+                        </label>
+                        <input type="text" class="form-control" id="assistantId" name="openai_assistant_id" 
+                               placeholder="asst-..." value="{{ settings.openai_assistant_id or '' }}">
+                        <div class="form-text">
+                            ID ассистента из OpenAI Platform. Создайте ассистента в OpenAI и скопируйте его ID.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="masterPrompt" class="form-label">
+                            Мастер-промпт
+                        </label>
+                        <textarea class="form-control" id="masterPrompt" name="master_prompt" rows="6" 
+                                  placeholder="Введите инструкции для ассистента...">{{ settings.master_prompt or '' }}</textarea>
+                        <div class="form-text">
+                            Основные инструкции для ИИ по генерации контента для этого модуля.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Специфичные настройки модулей -->
+            {% if module_name == 'vacancies' %}
+            <div class="card settings-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-table me-2"></i>
+                        Источник данных
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="googleSheetsUrl" class="form-label">
+                            <i class="fab fa-google me-2"></i>
+                            URL Google Sheets
+                        </label>
+                        <input type="url" class="form-control" id="googleSheetsUrl" name="google_sheets_url" 
+                               placeholder="https://docs.google.com/spreadsheets/d/..." 
+                               value="{{ settings.get_additional_settings().get('google_sheets_url', '') }}">
+                        <div class="form-text">
+                            Ссылка на Google Sheets с вакансиями. Таблица должна быть открыта для чтения.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if module_name == 'experts' %}
+            <div class="card settings-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        Портрет потребителя
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="consumerProfile" class="form-label">
+                            Описание целевой аудитории
+                        </label>
+                        <textarea class="form-control" id="consumerProfile" name="consumer_profile" rows="6" 
+                                  placeholder="Опишите вашу целевую аудиторию...">{{ settings.get_additional_settings().get('consumer_profile', '') }}</textarea>
+                        <div class="form-text">
+                            Подробное описание вашей целевой аудитории для генерации релевантных тем.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Конкуренты (только для трендвотчинга) -->
+            {% if module_name == 'trends' %}
+            <div class="card settings-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        Конкуренты для анализа
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="input-group">
+                            <span class="input-group-text">@</span>
+                            <input type="text" class="form-control" id="competitorUsername" 
+                                   placeholder="username">
+                            <select class="form-select" style="max-width: 150px;" id="competitorPlatform">
+                                <option value="instagram">Instagram</option>
+                                <option value="tiktok">TikTok</option>
+                                <option value="youtube">YouTube</option>
+                            </select>
+                            <button type="button" class="btn btn-outline-primary" onclick="addCompetitor()">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="competitorsList">
+                        <!-- Список конкурентов будет загружен здесь -->
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Настройки по умолчанию -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-sliders-h me-2"></i>
+                        Настройки по умолчанию
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="defaultVoice" class="form-label">
+                            <i class="fas fa-microphone me-2"></i>
+                            Голос по умолчанию
+                        </label>
+                        <select class="form-select" id="defaultVoice" name="default_voice_id">
+                            <option value="">Выберите голос...</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="defaultAvatar" class="form-label">
+                            <i class="fas fa-user me-2"></i>
+                            Аватар по умолчанию
+                        </label>
+                        <select class="form-select" id="defaultAvatar" name="default_avatar_id">
+                            <option value="">Выберите аватар...</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Тест подключений -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                        <i class="fas fa-wifi me-2"></i>
+                        Тест подключений
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="connectionTests">
+                        <button type="button" class="btn btn-outline-primary w-100" onclick="testConnections()">
+                            <i class="fas fa-plug me-2"></i>
+                            Проверить все подключения
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Экспорт/Импорт настроек -->
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-exchange-alt me-2"></i>
+                        Резервное копирование
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportSettings()">
+                            <i class="fas fa-download me-2"></i>
+                            Экспорт настроек
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="importSettings()">
+                            <i class="fas fa-upload me-2"></i>
+                            Импорт настроек
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Кнопки действий -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('module_page', module_name=module_name) }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Отмена
+                </a>
+                <div>
+                    <button type="button" class="btn btn-outline-primary me-2" onclick="resetSettings()">
+                        <i class="fas fa-undo me-2"></i>
+                        Сбросить
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save me-2"></i>
+                        Сохранить настройки
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if module_name == 'trends' %}
+    loadCompetitors();
+    {% endif %}
+    loadVoicesAndAvatars();
+});
+
+// Обработчик сохранения настроек
+document.getElementById('settingsForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {
+        openai_assistant_id: formData.get('openai_assistant_id'),
+        master_prompt: formData.get('master_prompt'),
+        api_keys: {
+            openai_api_key: formData.get('openai_api_key'),
+            elevenlabs_api_key: formData.get('elevenlabs_api_key'),
+            heygen_api_key: formData.get('heygen_api_key'),
+            {% if module_name == 'trends' %}
+            apify_api_key: formData.get('apify_api_key'),
+            assemblyai_api_key: formData.get('assemblyai_api_key')
+            {% else %}
+            assemblyai_api_key: formData.get('assemblyai_api_key')
+            {% endif %}
+        },
+        additional_settings: {
+            default_voice_id: formData.get('default_voice_id'),
+            default_avatar_id: formData.get('default_avatar_id'),
+            {% if module_name == 'vacancies' %}
+            google_sheets_url: formData.get('google_sheets_url')
+            {% elif module_name == 'experts' %}
+            consumer_profile: formData.get('consumer_profile')
+            {% endif %}
+        }
+    };
+    
+    try {
+        const result = await window.formUtils.saveSettings('{{ module_name }}', data);
+        if (result.success) {
+            window.contentFactory.showSuccess('Настройки успешно сохранены');
+        } else {
+            window.contentFactory.showError(result.message || 'Ошибка сохранения настроек');
+        }
+    } catch (error) {
+        window.contentFactory.showError('Ошибка сети: ' + error.message);
+    }
+});
+
+async function loadVoicesAndAvatars() {
+    // Загрузка голосов и аватаров для дефолтных настроек
+    // Код аналогичен другим страницам
+}
+
+{% if module_name == 'trends' %}
+async function loadCompetitors() {
+    try {
+        const response = await fetch('/api/competitors');
+        const competitors = await response.json();
+        
+        const container = document.getElementById('competitorsList');
+        
+        if (competitors.length === 0) {
+            container.innerHTML = '<p class="text-muted">Конкуренты не добавлены</p>';
+        } else {
+            container.innerHTML = competitors.map(comp => `
+                <div class="competitor-item">
+                    <div>
+                        <strong>@${comp.username}</strong>
+                        <small class="text-muted">(${comp.platform})</small>
+                    </div>
+                    <button type="button" class="btn btn-outline-danger btn-sm" 
+                            onclick="removeCompetitor(${comp.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+    } catch (error) {
+        console.error('Error loading competitors:', error);
+    }
+}
+
+async function addCompetitor() {
+    const username = document.getElementById('competitorUsername').value.trim();
+    const platform = document.getElementById('competitorPlatform').value;
+    
+    if (!username) {
+        window.contentFactory.showError('Введите имя пользователя');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/competitors', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, platform })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            document.getElementById('competitorUsername').value = '';
+            loadCompetitors();
+            window.contentFactory.showSuccess('Конкурент добавлен');
+        } else {
+            window.contentFactory.showError(result.message);
+        }
+    } catch (error) {
+        window.contentFactory.showError('Ошибка добавления конкурента');
+    }
+}
+
+async function removeCompetitor(id) {
+    if (!confirm('Удалить этого конкурента?')) return;
+    
+    try {
+        const response = await fetch(`/api/competitors?id=${id}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            loadCompetitors();
+            window.contentFactory.showSuccess('Конкурент удален');
+        } else {
+            window.contentFactory.showError(result.message);
+        }
+    } catch (error) {
+        window.contentFactory.showError('Ошибка удаления конкурента');
+    }
+}
+{% endif %}
+
+function testConnections() {
+    // Логика тестирования подключений
+    console.log('Testing connections...');
+}
+
+function exportSettings() {
+    // Логика экспорта настроек
+    console.log('Exporting settings...');
+}
+
+function importSettings() {
+    // Логика импорта настроек
+    console.log('Importing settings...');
+}
+
+function resetSettings() {
+    if (confirm('Сбросить все настройки? Это действие нельзя отменить.')) {
+        document.getElementById('settingsForm').reset();
+    }
+}
+</script>
+{% endblock %}

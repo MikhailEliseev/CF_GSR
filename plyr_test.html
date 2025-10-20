@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plyr Test</title>
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .plyr {
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">🎵 Plyr Audio Test</h1>
+        
+        <!-- Plyr плеер -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Красивый Plyr плеер</h5>
+            </div>
+            <div class="card-body">
+                <audio id="plyrPlayer" controls>
+                    <source src="/static/audio/test_hello.mp3" type="audio/mpeg">
+                </audio>
+                
+                <div class="mt-3">
+                    <button class="btn btn-primary me-2" onclick="playPlyr()">
+                        <i class="fas fa-play me-1"></i>Play
+                    </button>
+                    <button class="btn btn-warning me-2" onclick="pausePlyr()">
+                        <i class="fas fa-pause me-1"></i>Pause
+                    </button>
+                </div>
+                
+                <div id="plyrStatus" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+    <script>
+        let player = null;
+        
+        // Инициализация Plyr
+        document.addEventListener('DOMContentLoaded', function() {
+            player = new Plyr('#plyrPlayer');
+            
+            player.on('ready', () => {
+                console.log('✅ Plyr готов');
+                document.getElementById('plyrStatus').innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Plyr готов к воспроизведению!
+                    </div>`;
+            });
+            
+            player.on('error', (e) => {
+                console.error('❌ Ошибка Plyr:', e);
+                document.getElementById('plyrStatus').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Ошибка Plyr: ${e.message || 'Неизвестная ошибка'}
+                    </div>`;
+            });
+        });
+        
+        function playPlyr() {
+            if (player) {
+                player.play();
+            }
+        }
+        
+        function pausePlyr() {
+            if (player) {
+                player.pause();
+            }
+        }
+    </script>
+</body>
+</html>

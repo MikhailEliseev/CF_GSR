@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrome Audio Module Final</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">🔧 Chrome Audio Module Final</h1>
+        
+        <!-- Chrome-совместимый плеер -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Chrome-совместимый плеер</h5>
+            </div>
+            <div class="card-body">
+                <audio controls class="w-100" id="chromeAudioPlayer" preload="none">
+                    <source id="chromeAudioSource" src="" type="audio/mpeg">
+                    Ваш браузер не поддерживает аудио элемент.
+                </audio>
+                
+                <div class="mt-3">
+                    <button class="btn btn-primary me-2" onclick="loadChromeAudio()">
+                        <i class="fas fa-download me-1"></i>Загрузить аудио
+                    </button>
+                    <button class="btn btn-success me-2" onclick="playChromeAudio()">
+                        <i class="fas fa-play me-1"></i>Воспроизвести
+                    </button>
+                </div>
+                
+                <div id="chromeStatus" class="mt-3"></div>
+            </div>
+        </div>
+        
+        <!-- Альтернативный плеер -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Альтернативный плеер</h5>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-info me-2" onclick="loadAlternativeAudio()">
+                    <i class="fas fa-download me-1"></i>Альтернативная загрузка
+                </button>
+                <button class="btn btn-success me-2" onclick="playAlternativeAudio()">
+                    <i class="fas fa-play me-1"></i>Альтернативное воспроизведение
+                </button>
+                
+                <div id="alternativeStatus" class="mt-3"></div>
+            </div>
+        </div>
+        
+        <!-- Тест CORS -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Тест CORS</h5>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-warning me-2" onclick="testCORS()">
+                    <i class="fas fa-globe me-1"></i>Тест CORS
+                </button>
+                <button class="btn btn-info" onclick="testLocalFiles()">
+                    <i class="fas fa-file me-1"></i>Тест локальных файлов
+                </button>
+                
+                <div id="corsStatus" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chrome-совместимая загрузка аудио
+        function loadChromeAudio() {
+            const audioPlayer = document.getElementById('chromeAudioPlayer');
+            const audioSource = document.getElementById('chromeAudioSource');
+            const status = document.getElementById('chromeStatus');
+            
+            // Локальный файл
+            const audioUrl = '/static/audio/test_hello.mp3';
+            
+            status.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Загружаем аудио для Chrome...
+                </div>`;
+            
+            // Очищаем предыдущие обработчики
+            audioPlayer.removeEventListener('loadedmetadata', handleLoadedMetadata);
+            audioPlayer.removeEventListener('canplay', handleCanPlay);
+            audioPlayer.removeEventListener('error', handleError);
+            
+            // Добавляем новые обработчики
+            audioPlayer.addEventListener('loadedmetadata', handleLoadedMetadata);
+            audioPlayer.addEventListener('canplay', handleCanPlay);
+            audioPlayer.addEventListener('error', handleError);
+            
+            // Устанавливаем источник
+            audioSource.src = audioUrl;
+            
+            // Принудительная загрузка
+            audioPlayer.load();
+            
+            function handleLoadedMetadata() {
+                console.log('✅ Метаданные загружены');
+                status.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Аудио загружено! Длительность: ${Math.round(audioPlayer.duration)} сек
+                    </div>`;
+            }
+            
+            function handleCanPlay() {
+                console.log('✅ Аудио готово к воспроизведению');
+            }
+            
+            function handleError(e) {
+                console.error('❌ Ошибка загрузки:', e);
+                status.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Ошибка загрузки: ${e.message || 'Неизвестная ошибка'}
+                    </div>`;
+            }
+        }
+        
+        function playChromeAudio() {
+            const audioPlayer = document.getElementById('chromeAudioPlayer');
+            const status = document.getElementById('chromeStatus');
+            
+            if (audioPlayer.readyState < 2) {
+                status.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Аудио еще загружается... Подождите
+                    </div>`;
+                return;
+            }
+            
+            const playPromise = audioPlayer.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    status.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-play me-2"></i>
+                            Воспроизведение началось
+                        </div>`;
+                }).catch(error => {
+                    status.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Ошибка воспроизведения: ${error.message}
+                        </div>`;
+                });
+            }
+        }
+        
+        // Альтернативная загрузка
+        function loadAlternativeAudio() {
+            const status = document.getElementById('alternativeStatus');
+            
+            status.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Альтернативная загрузка...
+                </div>`;
+            
+            // Создаем временный аудио элемент
+            const tempAudio = document.createElement('audio');
+            tempAudio.preload = 'none';
+            tempAudio.src = '/static/audio/test_hello.mp3';
+            
+            tempAudio.addEventListener('loadedmetadata', function() {
+                status.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Альтернативная загрузка работает! Длительность: ${Math.round(tempAudio.duration)} сек
+                    </div>`;
+            });
+            
+            tempAudio.addEventListener('error', function(e) {
+                status.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Ошибка альтернативной загрузки: ${e.message || 'Неизвестная ошибка'}
+                    </div>`;
+            });
+            
+            tempAudio.load();
+        }
+        
+        function playAlternativeAudio() {
+            const status = document.getElementById('alternativeStatus');
+            
+            status.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Альтернативное воспроизведение...
+                </div>`;
+            
+            // Создаем временный аудио элемент
+            const tempAudio = document.createElement('audio');
+            tempAudio.preload = 'none';
+            tempAudio.src = '/static/audio/test_hello.mp3';
+            
+            tempAudio.addEventListener('loadedmetadata', function() {
+                tempAudio.play().then(() => {
+                    status.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Альтернативное воспроизведение работает! Длительность: ${Math.round(tempAudio.duration)} сек
+                        </div>`;
+                }).catch(error => {
+                    status.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Ошибка альтернативного воспроизведения: ${error.message}
+                        </div>`;
+                });
+            });
+            
+            tempAudio.addEventListener('error', function(e) {
+                status.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Ошибка альтернативного воспроизведения: ${e.message || 'Неизвестная ошибка'}
+                    </div>`;
+            });
+            
+            tempAudio.load();
+        }
+        
+        // Тест CORS
+        function testCORS() {
+            const status = document.getElementById('corsStatus');
+            
+            status.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Тестируем CORS...
+                </div>`;
+            
+            // Тест локального файла
+            fetch('/static/audio/test_hello.mp3', {
+                method: 'HEAD',
+                mode: 'cors'
+            })
+            .then(response => {
+                if (response.ok) {
+                    status.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            CORS работает! Статус: ${response.status}
+                        </div>`;
+                } else {
+                    status.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            CORS частично работает. Статус: ${response.status}
+                        </div>`;
+                }
+            })
+            .catch(error => {
+                status.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        CORS ошибка: ${error.message}
+                    </div>`;
+            });
+        }
+        
+        function testLocalFiles() {
+            const status = document.getElementById('corsStatus');
+            
+            status.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Тестируем локальные файлы...
+                </div>`;
+            
+            // Тест локальных файлов
+            const testFiles = [
+                '/static/audio/test_hello.mp3',
+                '/static/audio/test_audio.mp3',
+                '/static/audio/test_final.mp3'
+            ];
+            
+            let workingFiles = 0;
+            let totalFiles = testFiles.length;
+            
+            testFiles.forEach((file, index) => {
+                fetch(file, {
+                    method: 'HEAD',
+                    mode: 'cors'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        workingFiles++;
+                    }
+                    
+                    if (index === totalFiles - 1) {
+                        status.innerHTML = `
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Локальные файлы: ${workingFiles}/${totalFiles} работают
+                            </div>`;
+                    }
+                })
+                .catch(error => {
+                    if (index === totalFiles - 1) {
+                        status.innerHTML = `
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Локальные файлы: ${workingFiles}/${totalFiles} работают
+                            </div>`;
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>

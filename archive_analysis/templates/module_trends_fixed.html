@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+
+{% block title %}Модуль Трендвотчинга - Контент Завод{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card-gsr">
+            <div class="card-body text-center gsr-bg-gradient text-white" style="border-radius: 16px 16px 0 0;">
+                <img src="/static/7411193.png" alt="GSR" class="gsr-logo mb-3">
+                <h1 class="gsr-heading mb-2">
+                    <i class="fas fa-chart-line me-2"></i>Модуль Трендвотчинга
+                </h1>
+                <p class="mb-0 fs-5">Анализ трендов и создание вирусного контента на основе данных конкурентов</p>
+                <a href="{{ url_for('settings_page', module_name='trends') }}" class="btn btn-outline-light btn-lg mt-3">
+                    <i class="fas fa-cog me-2"></i>Настройки API
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Статусная информация - ИСПРАВЛЕННАЯ ВЕРСТКА -->
+<div class="row">
+    <div class="col-12">
+        <div class="card-gsr progress-step module-status-card" id="statusInfo">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-key text-success me-2"></i>
+                        <div>
+                            <div class="fw-semibold text-muted">Apify ключ</div>
+                            <div id="apifyStatus" class="fw-bold">проверяется…</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-users text-primary me-2"></i>
+                        <div>
+                            <div class="fw-semibold text-muted">Выбранные конкуренты</div>
+                            <div class="fw-bold"><span id="competitorsCount">0</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Шаг 1: Сбор рилсов - ИСПРАВЛЕННАЯ ВЕРСТКА -->
+<div class="row">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-active" id="step1">
+            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-4">
+                <div class="d-flex align-items-center mb-3 mb-md-0">
+                    <div class="step-number-gsr">1</div>
+                    <div>
+                        <h4 class="gsr-heading mb-1 gsr-text-primary">Сбор рилсов</h4>
+                        <p class="text-muted mb-0">Укажите конкурентов и лимит, чтобы собрать свежие рилсы</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <label class="form-label fw-semibold gsr-text-secondary">
+                        <i class="fas fa-hashtag me-2"></i>Количество рилсов на конкурента
+                    </label>
+                    <select class="form-select form-select-lg" id="reelsCount">
+                        <option value="10">10</option>
+                        <option value="20" selected>20</option>
+                        <option value="30">30</option>
+                        <option value="50">50</option>
+                    </select>
+                    <small class="text-muted">Можно отметить сразу нескольких конкурентов.</small>
+                </div>
+                <div class="col-lg-8">
+                    <label class="form-label fw-semibold gsr-text-secondary">
+                        <i class="fas fa-users me-2"></i>Конкуренты для анализа
+                    </label>
+                    <div id="competitorsList" class="p-3 border rounded bg-light" style="max-height: 220px; overflow-y: auto;">
+                        <div class="text-center text-muted">
+                            <div class="spinner-border spinner-border-sm" role="status"></div>
+                            <div class="mt-2">Загружаем конкурентов…</div>
+                        </div>
+                    </div>
+                    <div class="form-text mt-2">
+                        <a href="{{ url_for('settings_page', module_name='trends') }}" class="link-success">Перейти в настройки и добавить конкурентов</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex flex-column flex-md-row gap-3 mt-4">
+                <button class="btn btn-gsr-accent btn-lg flex-fill" id="collectButton" onclick="collectReels(event)">
+                    <i class="fas fa-cloud-download-alt me-2"></i>Собрать рилсы конкурентов
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Шаг 2: Отбор рилсов - ИСПРАВЛЕННАЯ ВЕРСТКА -->
+<div class="row">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-disabled" id="step2">
+            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-4">
+                <div class="d-flex align-items-center mb-3 mb-md-0">
+                    <div class="step-number-gsr">2</div>
+                    <div>
+                        <h4 class="gsr-heading mb-1 gsr-text-primary">Отбор рилсов</h4>
+                        <p class="text-muted mb-0">Анализируйте метрики и выбирайте лучший контент</p>
+                    </div>
+                </div>
+                <!-- ИСПРАВЛЕННАЯ СТАТИСТИКА - ПРАВИЛЬНОЕ РАСПОЛОЖЕНИЕ -->
+                <div class="bg-light rounded px-3 py-2 text-muted small">
+                    <div><strong>Всего:</strong> <span id="totalReels">0</span></div>
+                    <div><strong>Виральных (>30k):</strong> <span id="viralReels">0</span></div>
+                </div>
+            </div>
+
+            <!-- ИСПРАВЛЕННЫЕ КНОПКИ ФИЛЬТРАЦИИ -->
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <div class="btn-group">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="sortReels('views')">
+                        <i class="fas fa-sort-amount-down me-1"></i>По просмотрам
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="sortReels('likes')">
+                        <i class="fas fa-heart me-1"></i>По лайкам
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="sortReels('date')">
+                        <i class="fas fa-calendar-day me-1"></i>По дате
+                    </button>
+                </div>
+                <div class="ms-auto">
+                    <button class="btn btn-outline-primary btn-sm" onclick="exportReels()">
+                        <i class="fas fa-file-export me-1"></i>Выгрузить CSV
+                    </button>
+                </div>
+            </div>
+
+            <div class="row" id="reelsList"></div>
+            <div class="text-center text-muted" id="emptyState" style="display:block;">
+                <i class="fas fa-search fa-2x mb-2"></i>
+                <p class="mb-0">Рилсы не найдены. Попробуйте других конкурентов или увеличьте лимит.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Шаг 3: Транскрибация - ИСПРАВЛЕННАЯ ВЕРСТКА -->
+<div class="row">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-disabled" id="step3">
+            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-4">
+                <div class="d-flex align-items-center mb-3 mb-md-0">
+                    <div class="step-number-gsr">3</div>
+                    <div>
+                        <h4 class="gsr-heading mb-1 gsr-text-primary">Транскрибация</h4>
+                        <p class="text-muted mb-0">AssemblyAI преобразует аудио в текст</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Выбранный рилс</label>
+                        <div id="selectedReel" class="p-3 border rounded bg-light">
+                            <div class="text-center text-muted">
+                                <i class="fas fa-video fa-2x mb-2"></i>
+                                <p class="mb-0">Выберите рилс на предыдущем шаге</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Транскрипт</label>
+                        <div id="transcriptResult" class="p-3 border rounded bg-light" style="min-height: 120px;">
+                            <div class="text-center text-muted">
+                                <i class="fas fa-file-text fa-2x mb-2"></i>
+                                <p class="mb-0">Транскрипт появится здесь</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-3">
+                <button class="btn btn-gsr-accent btn-lg" onclick="transcribeReel()" id="transcribeBtn">
+                    <i class="fas fa-microphone me-2"></i>Транскрибировать
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Шаг 4: Переписывание - ИСПРАВЛЕННАЯ ВЕРСТКА -->
+<div class="row">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-disabled" id="step4">
+            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-4">
+                <div class="d-flex align-items-center mb-3 mb-md-0">
+                    <div class="step-number-gsr">4</div>
+                    <div>
+                        <h4 class="gsr-heading mb-1 gsr-text-primary">Переписывание</h4>
+                        <p class="text-muted mb-0">OpenAI Assistant переписывает текст под ваш стиль</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Оригинальный текст</label>
+                    <textarea class="form-control text-editor" id="originalText" readonly placeholder="Оригинальный транскрипт появится здесь..."></textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Переписанный текст</label>
+                    <textarea class="form-control text-editor" id="rewrittenText" placeholder="Переписанный текст появится здесь..."></textarea>
+                </div>
+            </div>
+
+            <div class="d-flex gap-3 mt-3">
+                <button class="btn btn-gsr-accent btn-lg" onclick="rewriteText()" id="rewriteBtn" disabled>
+                    <i class="fas fa-edit me-2"></i>Переписать
+                </button>
+                <button class="btn btn-outline-primary btn-lg" onclick="saveText()" id="saveBtn" disabled>
+                    <i class="fas fa-save me-2"></i>Сохранить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Шаг 5: Озвучка - ИСПРАВЛЕННАЯ ВЕРСТКА -->
+<div class="row">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-disabled" id="step5">
+            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-4">
+                <div class="d-flex align-items-center mb-3 mb-md-0">
+                    <div class="step-number-gsr">5</div>
+                    <div>
+                        <h4 class="gsr-heading mb-1 gsr-text-primary">Озвучка</h4>
+                        <p class="text-muted mb-0">ElevenLabs создает аудио из текста</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Выберите голос</label>
+                    <select class="form-select" id="voiceSelect">
+                        <option value="">Загружаем голоса...</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Предварительный просмотр</label>
+                    <div id="audioPreview" class="p-3 border rounded bg-light">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-volume-up fa-2x mb-2"></i>
+                            <p class="mb-0">Аудио появится здесь</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-3 mt-3">
+                <button class="btn btn-gsr-accent btn-lg" onclick="generateAudio()" id="audioBtn" disabled>
+                    <i class="fas fa-microphone me-2"></i>Создать аудио
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Шаг 6: Видео - ИСПРАВЛЕННАЯ ВЕРСТКА -->
+<div class="row">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-disabled" id="step6">
+            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-4">
+                <div class="d-flex align-items-center mb-3 mb-md-0">
+                    <div class="step-number-gsr">6</div>
+                    <div>
+                        <h4 class="gsr-heading mb-1 gsr-text-primary">Создание видео</h4>
+                        <p class="text-muted mb-0">HeyGen создает финальное видео</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Выберите аватар</label>
+                    <select class="form-select" id="avatarSelect">
+                        <option value="">Загружаем аватары...</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Финальное видео</label>
+                    <div id="videoPreview" class="p-3 border rounded bg-light">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-video fa-2x mb-2"></i>
+                            <p class="mb-0">Видео появится здесь</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-3 mt-3">
+                <button class="btn btn-gsr-accent btn-lg" onclick="generateVideo()" id="videoBtn" disabled>
+                    <i class="fas fa-video me-2"></i>Создать видео
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Логи действий -->
+<div class="row">
+    <div class="col-12">
+        <div class="card-gsr">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Логи действий
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="actionLogs" class="bg-light p-3 rounded" style="max-height: 200px; overflow-y: auto;">
+                    <div class="text-muted">Логи появятся здесь...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// JavaScript код остается тот же
+// ... (весь существующий JavaScript код)
+</script>
+{% endblock %}

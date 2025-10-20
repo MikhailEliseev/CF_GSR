@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест модуля вакансий</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Тест модуля вакансий</h1>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Тест JavaScript функций</h5>
+                        <button class="btn btn-primary" onclick="testGSRPipeline()">Тест GSRPipeline</button>
+                        <button class="btn btn-success" onclick="testParseVacancies()">Тест parseVacancies</button>
+                        <button class="btn btn-info" onclick="testLoadTestVacancies()">Тест loadTestVacancies</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-3">
+            <div class="col-12">
+                <div id="testStatus"></div>
+            </div>
+        </div>
+        
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Результаты тестов</h5>
+                        <div id="testResults"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подключаем JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="http://72.56.66.228/static/js/app.js"></script>
+    
+    <script>
+        function testGSRPipeline() {
+            console.log('🧪 Тестируем GSRPipeline...');
+            
+            if (typeof GSRPipeline === 'undefined') {
+                document.getElementById('testResults').innerHTML += '<div class="alert alert-danger">❌ GSRPipeline не определен</div>';
+                return;
+            }
+            
+            // Тест showStatus
+            GSRPipeline.showStatus('testStatus', 'processing', 'Тестирование GSRPipeline...');
+            
+            setTimeout(() => {
+                GSRPipeline.showStatus('testStatus', 'completed', '✅ GSRPipeline работает корректно!');
+                document.getElementById('testResults').innerHTML += '<div class="alert alert-success">✅ GSRPipeline.showStatus работает</div>';
+            }, 1000);
+        }
+        
+        function testParseVacancies() {
+            console.log('🧪 Тестируем parseVacancies...');
+            
+            if (typeof parseVacancies === 'undefined') {
+                document.getElementById('testResults').innerHTML += '<div class="alert alert-danger">❌ parseVacancies не определен</div>';
+                return;
+            }
+            
+            document.getElementById('testResults').innerHTML += '<div class="alert alert-success">✅ parseVacancies определен</div>';
+        }
+        
+        function testLoadTestVacancies() {
+            console.log('🧪 Тестируем loadTestVacancies...');
+            
+            if (typeof loadTestVacancies === 'undefined') {
+                document.getElementById('testResults').innerHTML += '<div class="alert alert-danger">❌ loadTestVacancies не определен</div>';
+                return;
+            }
+            
+            document.getElementById('testResults').innerHTML += '<div class="alert alert-success">✅ loadTestVacancies определен</div>';
+        }
+        
+        // Автоматический тест при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Запуск автоматических тестов...');
+            
+            // Проверяем доступность функций
+            setTimeout(() => {
+                if (typeof GSRPipeline !== 'undefined') {
+                    document.getElementById('testResults').innerHTML += '<div class="alert alert-success">✅ GSRPipeline загружен</div>';
+                } else {
+                    document.getElementById('testResults').innerHTML += '<div class="alert alert-danger">❌ GSRPipeline не загружен</div>';
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

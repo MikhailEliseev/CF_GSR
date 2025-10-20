@@ -1,0 +1,1165 @@
+{% extends "base.html" %}
+
+{% block title %}Модуль Вакансий - Контент Завод{% endblock %}
+
+{% block extra_head %}
+<!-- Plyr CSS & JS -->
+<link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+<script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+
+<style>
+    /* ПОЛНАЯ КОПИЯ СТИЛЕЙ ИЗ ТРЕНДВОТЧИНГА */
+    .progress-step {
+        margin-bottom: 30px !important;
+        box-shadow: 0 8px 32px rgba(0, 64, 39, 0.12) !important;
+        border-radius: 16px !important;
+        border: 1px solid rgba(0, 64, 39, 0.08) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .progress-step:hover {
+        box-shadow: 0 12px 40px rgba(0, 64, 39, 0.18) !important;
+        transform: translateY(-2px) !important;
+    }
+    
+    .progress-step.step-active {
+        border-color: var(--gsr-accent) !important;
+        box-shadow: 0 8px 32px rgba(39, 145, 52, 0.15) !important;
+    }
+    
+    .step-container {
+        padding: 0 15px;
+        margin-top: 40px;
+    }
+    
+    .progress-step .card-body,
+    .progress-step {
+        padding: 30px !important;
+    }
+    
+    .btn-gsr-accent {
+        box-shadow: 0 4px 16px rgba(39, 145, 52, 0.3) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .btn-gsr-accent:hover {
+        box-shadow: 0 6px 20px rgba(39, 145, 52, 0.4) !important;
+        transform: translateY(-1px) !important;
+    }
+    
+    .gsr-logo {
+        height: 90px !important;
+        width: 90px !important;
+        border-radius: 50% !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        padding: 18px !important;
+        box-shadow: 0 6px 20px rgba(255, 255, 255, 0.25) !important;
+        transition: all 0.3s ease !important;
+        border: 2px solid rgba(255, 255, 255, 0.3) !important;
+        object-fit: contain !important;
+    }
+    
+    .gsr-logo:hover {
+        transform: scale(1.08) !important;
+        box-shadow: 0 8px 25px rgba(255, 255, 255, 0.4) !important;
+        border-color: rgba(255, 255, 255, 0.5) !important;
+    }
+    
+    .gsr-logo {
+        animation: logoGlow 2s ease-in-out infinite alternate !important;
+    }
+    
+    @keyframes logoGlow {
+        0% { box-shadow: 0 6px 20px rgba(255, 255, 255, 0.25); }
+        100% { box-shadow: 0 8px 25px rgba(255, 255, 255, 0.35); }
+    }
+    
+    .progress-step.step-disabled {
+        display: none !important;
+    }
+    
+    .progress-step.step-active {
+        display: block !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Зеленая плашка с логотипом GSR -->
+<div class="row">
+    <div class="col-12">
+        <div class="card-gsr">
+            <div class="card-body text-center gsr-bg-gradient text-white" style="border-radius: 16px 16px 0 0;">
+                <img src="/static/7411193.png" alt="GSR" class="gsr-logo mb-3">
+                <h1 class="gsr-heading mb-2">
+                    <i class="fas fa-briefcase me-2"></i>Модуль Вакансий
+                </h1>
+                <p class="mb-0 fs-5">Создание привлекательного видео-контента для вакансий</p>
+                <a href="/" class="btn btn-outline-light btn-lg mt-3">
+                    <i class="fas fa-cog me-2"></i>Настройки
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ШАГ 1: Загрузка вакансий -->
+<div class="row step-container">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-active" id="step1">
+            <div class="d-flex align-items-center mb-4">
+                <div class="step-number-gsr">1</div>
+                <div>
+                    <h4 class="gsr-heading mb-1 gsr-text-primary">Загрузка вакансий</h4>
+                    <p class="text-muted mb-0">Парсинг данных из Google Sheets</p>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label for="sheetUrl" class="form-label fw-bold gsr-text-secondary">
+                    <i class="fas fa-link me-2"></i>URL Google Sheets
+                </label>
+                <input type="url" class="form-control form-control-lg" id="sheetUrl" 
+                       placeholder="https://docs.google.com/spreadsheets/d/..."
+                       value="https://docs.google.com/spreadsheets/u/1/d/1I1AfpmNbd-K0Osd4Vh7npDCYSQr2a1t_KdT8ms9vgr4/edit?gid=718924971#gid=718924971"
+                       style="border: 2px solid rgba(0, 64, 39, 0.2); border-radius: 12px;">
+            </div>
+            
+            <div class="mb-4">
+                <label for="csvFile" class="form-label fw-bold gsr-text-secondary">
+                    <i class="fas fa-file-csv me-2"></i>Или загрузите CSV файл
+                </label>
+                <input type="file" class="form-control form-control-lg" id="csvFile" accept=".csv"
+                       style="border: 2px solid rgba(0, 64, 39, 0.2); border-radius: 12px;">
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label fw-bold gsr-text-secondary">
+                    <i class="fas fa-cogs me-2"></i>Метод парсинга:
+                </label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="parsingMethod" id="methodOpenAI" value="openai" checked>
+                    <label class="form-check-label" for="methodOpenAI">
+                        <i class="fas fa-robot me-1"></i>OpenAI (текущий, медленный, точный)
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="parsingMethod" id="methodDirect" value="direct">
+                    <label class="form-check-label" for="methodDirect">
+                        <i class="fas fa-bolt me-1"></i>Прямой парсинг (НОВЫЙ, быстрый, тест)
+                    </label>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-gsr-accent btn-lg" onclick="loadVacancies()">
+                    <i class="fas fa-download me-2"></i>Загрузить вакансии
+                </button>
+                <button class="btn btn-success btn-lg" onclick="loadCsv()">
+                    <i class="fas fa-upload me-2"></i>Загрузить CSV
+                </button>
+            </div>
+            
+            <div id="parseStatus" class="mt-3"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ШАГ 2: Выбор вакансии -->
+<div class="row step-container">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-disabled" id="step2">
+            <div class="d-flex align-items-center mb-4">
+                <div class="step-number-gsr">2</div>
+                <div>
+                    <h4 class="gsr-heading mb-1 gsr-text-primary">Выбор вакансии</h4>
+                    <p class="text-muted mb-0">Выберите вакансию для создания видео</p>
+                </div>
+            </div>
+            
+            <div id="vacanciesList" class="row g-3">
+                <div class="col-12 text-center text-muted p-4">
+                    <i class="fas fa-info-circle fa-2x mb-2"></i>
+                    <div>Сначала загрузите вакансии</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ШАГ 3: Редактирование текста -->
+<div class="row step-container">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-disabled" id="step3">
+            <div class="d-flex align-items-center mb-4">
+                <div class="step-number-gsr">3</div>
+                <div>
+                    <h4 class="gsr-heading mb-1 gsr-text-primary">Редактирование текста</h4>
+                    <p class="text-muted mb-0">Отредактируйте сгенерированный текст при необходимости</p>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="videoText" class="form-label fw-bold gsr-text-secondary">
+                    <i class="fas fa-edit me-2"></i>Текст для видео (40-60 секунд)
+                </label>
+                <textarea class="form-control" id="videoText" rows="8" 
+                          placeholder="Здесь появится сгенерированный текст для редактирования..."
+                          style="border: 2px solid rgba(0, 64, 39, 0.2); border-radius: 12px;"></textarea>
+            </div>
+            
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-gsr-accent btn-lg" onclick="generateText()">
+                    <i class="fas fa-magic me-2"></i>Сгенерировать текст
+                </button>
+            </div>
+            
+            <div id="textStatus" class="mt-3"></div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- ШАГ 4: Генерация аудио -->
+<div class="row step-container">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-disabled" id="step4">
+            <div class="d-flex align-items-center mb-4">
+                <div class="step-number-gsr">4</div>
+                <div>
+                    <h4 class="gsr-heading mb-1 gsr-text-primary">Генерация аудио</h4>
+                    <p class="text-muted mb-0">Создайте аудиодорожку из текста с помощью ElevenLabs</p>
+                </div>
+            </div>
+            
+            <!-- Настройки голоса -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Голос</label>
+                    <select class="form-select" id="voiceSelect">
+                        <option value="CfPkL4eEqBDVYldLZuY5" selected>Алексей Архангельский (Русский)</option>
+                        <option value="2EiwWnXFnvU5JabPnv8n">Clyde (Male, American)</option>
+                        <option value="CwhRBWXzGAHq8TQ4Fs17">Roger (Male, American)</option>
+                        <option value="EXAVITQu4vr4xnSDxMaL">Sarah (Female, American)</option>
+                        <option value="FGY2WhTYpPnrIDTdsKH5">Laura (Female, American)</option>
+                        <option value="IKne3meq5aSn9XLyUdCD">Charlie (Male, Australian)</option>
+                        <option value="JBFqnCBsd6RMkjVDRZzb">George (Male, British)</option>
+                        <option value="N2lVS1w4EtoT3dr4eOWO">Callum (Male)</option>
+                        <option value="SAz9YHcvj6GT2YYXdXww">River (Neutral, American)</option>
+                        <option value="SOYHLrjzK2X1ezoPC6cr">Harry (Male, American)</option>
+                        <option value="TX3LPaxmHKxFdv7VOQHJ">Liam (Male, American)</option>
+                        <option value="Xb7hH8MSUJpSbSDYk0k2">Alice (Female, British)</option>
+                        <option value="XrExE9yKIg1WjnnlVkGX">Matilda (Female, American)</option>
+                        <option value="bIHbv24MWmeRgasZH58o">Will (Male, American)</option>
+                        <option value="cgSgspJ2msm6clMCkdW9">Jessica (Female, American)</option>
+                        <option value="cjVigY5qzO86Huf0OWal">Eric (Male, American)</option>
+                        <option value="iP95p4xoKVk53GoZ742B">Chris (Male, American)</option>
+                        <option value="nPczCjzI2devNBz1zQrb">Brian (Male, American)</option>
+                        <option value="onwK4e9ZLuTAKqWW03F9">Daniel (Male, British)</option>
+                        <option value="pFZP5JQG7iQjIQuC4Bku">Lily (Female)</option>
+                        <option value="pqHfZKP75CvOlQylNhV4">Bill (Male, American)</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label">Модель</label>
+                    <select class="form-select" id="modelSelect" onchange="updateModelSettings()">
+                        <option value="eleven_flash_v2_5" selected>Eleven Flash v2.5 (Быстрая)</option>
+                        <option value="eleven_multilingual_v2">Eleven Multilingual v2 (Многоязычная)</option>
+                        <option value="eleven_turbo_v2_5">Eleven Turbo v2.5 (Сбалансированная)</option>
+                    </select>
+                    <small class="text-muted d-block mt-1">Настройки обновятся автоматически</small>
+                </div>
+            </div>
+            
+            <!-- Слайдеры настроек -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <label class="form-label">Стабильность: <span id="stabilityValue">0.5</span></label>
+                    <input type="range" class="form-range" id="stabilitySlider" 
+                           min="0.0" max="1.0" step="0.1" value="0.5">
+                    <small class="text-muted">Чем выше, тем стабильнее голос</small>
+                </div>
+                
+                <div class="col-md-4">
+                    <label class="form-label">Схожесть: <span id="similarityValue">0.75</span></label>
+                    <input type="range" class="form-range" id="similaritySlider" 
+                           min="0.0" max="1.0" step="0.1" value="0.75">
+                    <small class="text-muted">Схожесть с оригинальным голосом</small>
+                </div>
+                
+                <div class="col-md-4">
+                    <label class="form-label">Скорость: <span id="speedValue">1.0</span></label>
+                    <input type="range" class="form-range" id="speedSlider" 
+                           min="0.5" max="2.0" step="0.1" value="1.0">
+                    <small class="text-muted">Скорость воспроизведения</small>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-check-label">
+                    <input type="checkbox" id="useAdvanced" class="form-check-input me-2">
+                    Использовать расширенные параметры
+                </label>
+                <small class="text-muted d-block">Применить stability и similarity</small>
+            </div>
+            
+            <button class="btn btn-success btn-lg" onclick="generateAudio()">
+                <i class="fas fa-volume-up me-2"></i>Сгенерировать аудио
+            </button>
+            
+            <div id="audioStatus" class="mt-3"></div>
+            
+            <div id="audioResult" class="mt-4" style="display: none;">
+                <h5 class="gsr-text-primary">Сгенерированное аудио:</h5>
+                <audio id="audioPlayer" controls playsinline>
+                    <source id="audioSource" src="" type="audio/mpeg">
+                </audio>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ШАГ 5: Генерация видео -->
+<div class="row step-container">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-disabled" id="step5">
+            <div class="d-flex align-items-center mb-4">
+                <div class="step-number-gsr">5</div>
+                <div>
+                    <h4 class="gsr-heading mb-1 gsr-text-primary">Генерация видео</h4>
+                    <p class="text-muted mb-0">Создайте видео с аватаром через HeyGen</p>
+                </div>
+            </div>
+            
+            <!-- Выбор аватара -->
+            <div class="mb-4">
+                <h5 class="gsr-text-primary mb-3">
+                    <i class="fas fa-user-circle me-2"></i>Выберите аватар
+                </h5>
+                <select id="avatarSelect" class="form-select mb-3">
+                    <option value="">Загружаем аватары...</option>
+                </select>
+                <div id="avatarPreview" class="text-center">
+                    <img id="avatarPreviewImg" src="" alt="Avatar Preview" class="img-thumbnail" 
+                         style="max-width: 200px; max-height: 200px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: none;">
+                    <div id="avatarPreviewPlaceholder" class="text-muted" style="display: block;">
+                        <i class="fas fa-user-circle fa-3x mb-2"></i>
+                        <p>Выберите аватар для предпросмотра</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Ориентация видео -->
+            <div class="mb-4">
+                <h5 class="gsr-text-primary mb-3">
+                    <i class="fas fa-mobile-alt me-2"></i>Ориентация видео
+                </h5>
+                <div class="btn-group w-100" role="group">
+                    <input type="radio" class="btn-check" name="videoOrientation" id="vertical" value="vertical" checked>
+                    <label class="btn btn-outline-primary" for="vertical">
+                        <i class="fas fa-mobile-alt me-2"></i>Портрет (9:16)
+                    </label>
+                    
+                    <input type="radio" class="btn-check" name="videoOrientation" id="horizontal" value="horizontal">
+                    <label class="btn btn-outline-primary" for="horizontal">
+                        <i class="fas fa-desktop me-2"></i>Горизонтальная (16:9)
+                    </label>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary btn-lg w-100" onclick="generateVideo()">
+                <i class="fas fa-video me-2"></i>Сгенерировать видео
+            </button>
+            
+            <div id="videoStatus" class="mt-3"></div>
+            
+            <div id="videoResult" class="mt-4" style="display: none;">
+                <h5 class="gsr-text-primary">Сгенерированное видео:</h5>
+                <video id="videoPlayer" controls style="width: 100%; max-width: 600px;">
+                    <source id="videoSource" src="" type="video/mp4">
+                </video>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ШАГ 6: Submagic обработка -->
+<div class="row step-container">
+    <div class="col-12">
+        <div class="card-gsr progress-step step-disabled" id="step6">
+            <div class="d-flex align-items-center mb-4">
+                <div class="step-number-gsr">6</div>
+                <div>
+                    <h4 class="gsr-heading mb-1 gsr-text-primary">Финальная обработка</h4>
+                    <p class="text-muted mb-0">Добавьте субтитры и эффекты через Submagic</p>
+                </div>
+            </div>
+            
+            <button class="btn btn-warning btn-lg" onclick="generateSubmagic()">
+                <i class="fas fa-film me-2"></i>Обработать через Submagic
+            </button>
+            
+            <div id="submagicStatus" class="mt-3"></div>
+            
+            <div id="submagicResult" class="mt-4" style="display: none;">
+                <h5 class="gsr-text-primary">Финальное видео:</h5>
+                <video id="submagicPlayer" controls style="width: 100%; max-width: 600px;">
+                    <source id="submagicSource" src="" type="video/mp4">
+                </video>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+console.log('🚀 Модуль вакансий загружен');
+
+// Оптимальные настройки для каждой модели ElevenLabs
+const MODEL_SETTINGS = {
+    'eleven_flash_v2_5': {
+        stability: 0.5,
+        similarity: 0.75,
+        speed: 1.0,
+        description: 'Быстрая генерация'
+    },
+    'eleven_multilingual_v2': {
+        stability: 0.5,
+        similarity: 0.5,
+        speed: 1.0,
+        description: 'Многоязычная, высокое качество'
+    },
+    'eleven_turbo_v2_5': {
+        stability: 0.6,
+        similarity: 0.7,
+        speed: 1.0,
+        description: 'Сбалансированная'
+    }
+};
+
+// Автоматическое обновление настроек при выборе модели
+function updateModelSettings() {
+    const modelSelect = document.getElementById('modelSelect');
+    if (!modelSelect) return;
+    
+    const selectedModel = modelSelect.value;
+    const settings = MODEL_SETTINGS[selectedModel];
+    
+    if (settings) {
+        console.log('Применяем настройки для модели', selectedModel, ':', settings);
+        
+        const stabilitySlider = document.getElementById('stabilitySlider');
+        const stabilityValue = document.getElementById('stabilityValue');
+        const similaritySlider = document.getElementById('similaritySlider');
+        const similarityValue = document.getElementById('similarityValue');
+        const speedSlider = document.getElementById('speedSlider');
+        const speedValue = document.getElementById('speedValue');
+        
+        if (stabilitySlider && stabilityValue) {
+            stabilitySlider.value = settings.stability;
+            stabilityValue.textContent = settings.stability;
+        }
+        
+        if (similaritySlider && similarityValue) {
+            similaritySlider.value = settings.similarity;
+            similarityValue.textContent = settings.similarity;
+        }
+        
+        if (speedSlider && speedValue) {
+            speedSlider.value = settings.speed;
+            speedValue.textContent = settings.speed;
+        }
+    }
+
+// ===== ФУНКЦИИ ДЛЯ РАБОТЫ С АВАТАРАМИ HEYGEN =====
+
+// Функция загрузки аватаров HeyGen
+async function loadAvatars() {
+    console.log('👥 Загружаем список аватаров...');
+    const avatarSelect = document.getElementById('avatarSelect');
+    const avatarPreview = document.getElementById('avatarPreviewImg');
+    
+    if (!avatarSelect) {
+        console.error('❌ Элемент avatarSelect не найден!');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/vacancies/list-avatars');
+        const data = await response.json();
+        
+        if (data.success && data.avatars && data.avatars.length > 0) {
+            avatarSelect.innerHTML = '';
+            
+            // Сортируем: мои аватары (owned) вверху, потом публичные
+            const sortedAvatars = data.avatars.sort((a, b) => {
+                const aIsOwned = a.avatar_type === 'owned' || a.is_owned === true;
+                const bIsOwned = b.avatar_type === 'owned' || b.is_owned === true;
+                if (aIsOwned && !bIsOwned) return -1;
+                if (!aIsOwned && bIsOwned) return 1;
+                return 0;
+            });
+            
+            // Добавляем опции с разделителями
+            let lastType = null;
+            sortedAvatars.forEach((avatar, index) => {
+                const isOwned = avatar.avatar_type === 'owned' || avatar.is_owned === true;
+                const currentType = isOwned ? 'owned' : 'public';
+                
+                if (lastType === 'owned' && currentType === 'public') {
+                    const separator = document.createElement('option');
+                    separator.disabled = true;
+                    separator.textContent = '--- Публичные аватары ---';
+                    avatarSelect.appendChild(separator);
+                }
+                
+                const option = document.createElement('option');
+                option.value = avatar.avatar_id;
+                const prefix = isOwned ? '⭐ ' : '';
+                option.textContent = prefix + avatar.avatar_name;
+                if (index === 0) option.selected = true;
+                avatarSelect.appendChild(option);
+                
+                lastType = currentType;
+            });
+            
+            // Preview первого аватара
+            if (sortedAvatars[0] && avatarPreview) {
+                const firstAvatar = sortedAvatars[0];
+                if (firstAvatar.preview_image_url) {
+                    avatarPreview.src = firstAvatar.preview_image_url;
+                } else {
+                    avatarPreview.src = generateAvatarPreview(firstAvatar.avatar_id, firstAvatar.avatar_name);
+                }
+                avatarPreview.style.display = 'block';
+                
+                const placeholder = document.getElementById('avatarPreviewPlaceholder');
+                if (placeholder) placeholder.style.display = 'none';
+            }
+            
+            // Обработчик смены аватара
+            avatarSelect.addEventListener('change', function() {
+                console.log('👤 Выбран аватар:', this.value);
+                const selectedAvatar = sortedAvatars.find(a => a.avatar_id === this.value);
+                if (selectedAvatar && avatarPreview) {
+                    if (selectedAvatar.preview_image_url) {
+                        avatarPreview.src = selectedAvatar.preview_image_url;
+                    } else {
+                        avatarPreview.src = generateAvatarPreview(selectedAvatar.avatar_id, selectedAvatar.avatar_name);
+                    }
+                    avatarPreview.style.display = 'block';
+                    const placeholder = document.getElementById('avatarPreviewPlaceholder');
+                    if (placeholder) placeholder.style.display = 'none';
+                }
+            });
+            
+            console.log('✅ Аватары загружены:', sortedAvatars.length);
+        } else {
+            throw new Error('Не удалось загрузить аватары');
+        }
+    } catch (error) {
+        console.error('❌ Ошибка загрузки аватаров:', error);
+        if (avatarSelect) {
+            avatarSelect.innerHTML = '<option value="Angela_public">Angela (деловой стиль)</option>';
+        }
+    }
+}
+
+// Функция генерации preview изображения для аватаров
+function generateAvatarPreview(avatarId, avatarName) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 200;
+    canvas.height = 200;
+    const ctx = canvas.getContext('2d');
+    
+    const gradient = ctx.createLinearGradient(0, 0, 200, 200);
+    gradient.addColorStop(0, '#667eea');
+    gradient.addColorStop(1, '#764ba2');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 200, 200);
+    
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.beginPath();
+    ctx.arc(100, 80, 60, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 48px Arial';
+    ctx.textAlign = 'center';
+    const initials = avatarName.split(' ').map(word => word[0]).join('').substring(0, 2);
+    ctx.fillText(initials, 100, 95);
+    
+    ctx.font = 'bold 16px Arial';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    
+    const words = avatarName.split(' ');
+    let y = 150;
+    words.forEach(word => {
+        if (word.length > 12) {
+            const chunks = word.match(/.{1,12}/g) || [word];
+            chunks.forEach(chunk => {
+                ctx.fillText(chunk, 100, y);
+                y += 20;
+            });
+        } else {
+            ctx.fillText(word, 100, y);
+            y += 20;
+        }
+    });
+    
+    return canvas.toDataURL();
+}
+}
+
+// Обновление значений слайдеров в реальном времени
+document.addEventListener('DOMContentLoaded', function() {
+    // Применяем настройки по умолчанию
+    updateModelSettings();
+    
+    // Обработчики для слайдеров
+    const stabilitySlider = document.getElementById('stabilitySlider');
+    if (stabilitySlider) {
+        stabilitySlider.addEventListener('input', function(e) {
+            document.getElementById('stabilityValue').textContent = e.target.value;
+        });
+    }
+    
+    const similaritySlider = document.getElementById('similaritySlider');
+    if (similaritySlider) {
+        similaritySlider.addEventListener('input', function(e) {
+            document.getElementById('similarityValue').textContent = e.target.value;
+        });
+    }
+    
+    const speedSlider = document.getElementById('speedSlider');
+    if (speedSlider) {
+        speedSlider.addEventListener('input', function(e) {
+            document.getElementById('speedValue').textContent = e.target.value;
+        });
+    }
+});
+
+
+// Функция отображения статуса
+function showStatus(message, type) {
+    const status = document.getElementById('parseStatus');
+    const alertClass = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-danger' : 'alert-info';
+    status.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+}
+
+// Функция обновления статистики текста
+function updateTextStats() {
+    const textarea = document.getElementById('editableText');
+    const statsDiv = document.getElementById('textStats');
+    if (!textarea || !statsDiv) return;
+    
+    const text = textarea.value;
+    const charCount = text.length;
+    
+    // Примерное время: 150-180 символов в минуту, берем среднее 165
+    const secondsEstimate = Math.ceil((charCount / 165) * 60);
+    const minutes = Math.floor(secondsEstimate / 60);
+    const seconds = secondsEstimate % 60;
+    
+    let timeText = '';
+    if (minutes > 0) {
+        timeText = `~${minutes} мин ${seconds} сек`;
+    } else {
+        timeText = `~${seconds} сек`;
+    }
+    
+    statsDiv.textContent = `Символов: ${charCount} | Примерное время: ${timeText}`;
+}
+
+// Загрузка вакансий из Google Sheets
+function loadVacancies() {
+    console.log('🔄 Загружаем вакансии из Google Sheets...');
+    const url = document.getElementById('sheetUrl').value;
+    if (!url) {
+        alert('Введите URL Google Sheets');
+        return;
+    }
+    
+    // НОВОЕ: выбор метода
+    const method = document.querySelector('input[name="parsingMethod"]:checked').value;
+    const endpoint = method === 'direct' ? '/api/vacancies/parse-direct' : '/api/vacancies/parse';
+    console.log(`🔧 Используем метод: ${method}, endpoint: ${endpoint}`);
+    
+    showStatus('Загружаем вакансии...', 'info');
+    
+    fetch(endpoint, {  // Используем выбранный endpoint
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showStatus(`✅ Загружено ${data.count} вакансий (${method})`, 'success');
+            displayVacancies(data.vacancies);
+        } else {
+            showStatus('❌ Ошибка: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Ошибка:', error);
+        showStatus('❌ Ошибка: ' + error.message, 'error');
+    });
+}
+
+// Загрузка CSV файла
+function loadCsv() {
+    console.log('🔄 Загружаем CSV файл...');
+    const fileInput = document.getElementById('csvFile');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('Выберите CSV файл');
+        return;
+    }
+    
+    showStatus('Загружаем CSV...', 'info');
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/api/vacancies/upload-csv', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showStatus(`✅ Загружено ${data.count} вакансий из CSV`, 'success');
+            displayVacancies(data.vacancies);
+        } else {
+            showStatus('❌ Ошибка: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Ошибка:', error);
+        showStatus('❌ Ошибка: ' + error.message, 'error');
+    });
+}
+
+
+// Отображение списка вакансий
+function displayVacancies(vacancies) {
+    console.log('📋 Отображаем вакансии:', vacancies);
+    
+    const container = document.getElementById('vacanciesList');
+    container.innerHTML = '';
+    
+    vacancies.forEach((vacancy, index) => {
+        const card = document.createElement('div');
+        card.className = 'col-md-6';
+        card.innerHTML = `
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title gsr-text-primary">${vacancy.position}</h5>
+                    <p class="card-text"><strong>Компания:</strong> ${vacancy.company}</p>
+                    <p class="card-text"><strong>Локация:</strong> ${vacancy.location}</p>
+                    <p class="card-text"><strong>Зарплата:</strong> ${vacancy.salary}</p>
+                    <button class="btn btn-gsr-accent" onclick="selectVacancy(${index})">
+                        <i class="fas fa-check me-2"></i>Выбрать
+                    </button>
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+    
+    // АКТИВИРУЕМ ШАГ 2
+    console.log('✅ Активируем шаг 2');
+    const step2 = document.getElementById('step2');
+    step2.classList.remove('step-disabled');
+    step2.classList.add('step-active');
+    
+    // Плавный скролл к шагу 2
+    setTimeout(() => {
+        step2.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
+    
+    // Сохраняем вакансии в глобальную переменную
+    window.currentVacancies = vacancies;
+}
+
+// Выбор вакансии
+function selectVacancy(index) {
+    console.log('✅ Выбрана вакансия:', index);
+    const vacancy = window.currentVacancies[index];
+    
+    // Заполняем текст для видео
+    document.getElementById('videoText').value = `Вакансия: ${vacancy.position}\nКомпания: ${vacancy.company}\nЛокация: ${vacancy.location}\nЗарплата: ${vacancy.salary}`;
+    
+    // АКТИВИРУЕМ ШАГ 3
+    console.log('✅ Активируем шаг 3');
+    const step3 = document.getElementById('step3');
+    step3.classList.remove('step-disabled');
+    step3.classList.add('step-active');
+    
+    // Плавный скролл к шагу 3
+    setTimeout(() => {
+        step3.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
+    
+    showStatus('✅ Вакансия выбрана', 'success');
+    
+    // Сохраняем выбранную вакансию
+    window.selectedVacancy = vacancy;
+}
+
+// Генерация текста
+function generateText() {
+    console.log('🔄 Генерируем текст...');
+    
+    if (!window.selectedVacancy) {
+        alert('Сначала выберите вакансию');
+        return;
+    }
+    
+    const textStatus = document.getElementById('textStatus');
+    textStatus.innerHTML = '<div class="alert alert-info">Генерируем текст с помощью ИИ...</div>';
+    
+    fetch('/api/vacancies/generate-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vacancy: window.selectedVacancy })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('videoText').value = data.text;
+            textStatus.innerHTML = '<div class="alert alert-success">✅ Текст сгенерирован</div>';
+            
+            // АКТИВИРУЕМ ШАГ 4 (генерация аудио)
+            console.log('✅ Активируем шаг 4');
+            const step4 = document.getElementById('step4');
+            step4.classList.remove('step-disabled');
+            step4.classList.add('step-active');
+            
+            // Плавный скролл к шагу 4
+            setTimeout(() => {
+                step4.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 300);
+        } else {
+            textStatus.innerHTML = '<div class="alert alert-danger">❌ Ошибка: ' + data.error + '</div>';
+        }
+    })
+    .catch(error => {
+        console.error('❌ Ошибка:', error);
+        textStatus.innerHTML = '<div class="alert alert-danger">❌ Ошибка: ' + error.message + '</div>';
+    });
+}
+
+// Генерация аудио
+async function generateAudio() {
+    console.log('🎵 Генерация аудио через ElevenLabs...');
+    
+    // Получаем текст из поля videoText
+    const text = document.getElementById('videoText').value;
+    
+    if (!text || text.trim() === '') {
+        alert('Пожалуйста, введите текст для озвучки');
+        return;
+    }
+    
+    // Получаем настройки
+    const voiceId = document.getElementById('voiceSelect')?.value || 'CfPkL4eEqBDVYldLZuY5';
+    const modelId = document.getElementById('modelSelect')?.value || 'eleven_flash_v2_5';
+    const stability = parseFloat(document.getElementById('stabilitySlider')?.value || 0.5);
+    const similarity = parseFloat(document.getElementById('similaritySlider')?.value || 0.5);
+    const speed = parseFloat(document.getElementById('speedSlider')?.value || 1.0);
+    const useAdvanced = document.getElementById('useAdvanced')?.checked || false;
+    
+    const statusDiv = document.getElementById('audioStatus');
+    statusDiv.innerHTML = `
+        <div class="alert alert-info">
+            <i class="fas fa-spinner fa-spin me-2"></i>
+            Создаем аудио через ElevenLabs API...
+            <br><small class="text-muted">Голос: ${voiceId}, Модель: ${modelId}</small>
+        </div>`;
+    
+    try {
+        const requestBody = {
+            text: text,
+            voice_id: voiceId,
+            model_id: modelId,
+            speed: speed
+        };
+
+        // Добавляем расширенные параметры если включено
+        if (useAdvanced) {
+            requestBody.use_advanced = true;
+            requestBody.stability = stability;
+            requestBody.similarity_boost = similarity;
+        }
+
+        const response = await fetch('/api/vacancies/generate-audio', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(requestBody)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            statusDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Аудио создано ElevenLabs!
+                </div>`;
+            
+            // Сохраняем URL аудио для HeyGen (полный URL)
+            if (result.audio_url.startsWith('/static/')) {
+                // Локальный путь - делаем полный URL
+                window.generatedAudioUrl = window.location.origin + result.audio_url;
+            } else {
+                // Уже полный URL
+                window.generatedAudioUrl = result.audio_url;
+            }
+            
+            console.log('🔗 Audio URL для HeyGen:', window.generatedAudioUrl);
+            
+            // Показываем аудио плеер
+            document.getElementById('audioResult').style.display = 'block';
+            
+            // Инициализируем Plyr плеер
+            initializePlyrPlayer(window.generatedAudioUrl);
+            
+            // АКТИВИРУЕМ ШАГ 5 (генерация видео)
+            console.log('✅ Активируем шаг 5');
+            const step5 = document.getElementById('step5');
+            step5.classList.remove('step-disabled');
+            step5.classList.add('step-active');
+            
+        // Плавный скролл к шагу 5
+        setTimeout(() => {
+            step5.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Загружаем список аватаров
+            loadAvatars();
+        }, 300);
+        } else {
+            statusDiv.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>❌ Ошибка: ${result.message}</div>`;
+        }
+    } catch (error) {
+        console.error('❌ Ошибка:', error);
+        statusDiv.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>❌ Ошибка: ${error.message}</div>`;
+    }
+}
+
+// Генерация видео через HeyGen
+async function generateVideo() {
+    console.log('🎬 ===== ГЕНЕРАЦИЯ ВИДЕО HEYGEN =====');
+    
+    // Проверяем наличие аудио URL
+    if (!window.generatedAudioUrl) {
+        alert('❌ Сначала сгенерируйте аудио!');
+        console.error('❌ window.generatedAudioUrl не установлен');
+        return;
+    }
+    
+    // Получаем выбранный аватар и ориентацию
+    const avatarId = document.getElementById('avatarSelect').value;
+    const videoFormat = document.querySelector('input[name="videoOrientation"]:checked').value;
+    
+    console.log('🔧 Настройки:', { avatarId, videoFormat, audioUrl: window.generatedAudioUrl });
+    
+    if (!avatarId) {
+        alert('Выберите аватар!');
+        return;
+    }
+    
+    const statusDiv = document.getElementById('videoStatus');
+    if (!statusDiv) {
+        console.error('❌ Элемент videoStatus не найден');
+        return;
+    }
+    
+    statusDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>Генерируем видео с помощью HeyGen...</div>';
+    
+    try {
+        const response = await fetch('/api/vacancies/generate-video', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                audio_url: window.generatedAudioUrl,
+                avatar_id: avatarId,
+                video_format: videoFormat
+            })
+        });
+        
+        console.log('📡 HTTP Status:', response.status);
+        
+        const result = await response.json();
+        console.log('📦 Ответ:', result);
+        
+        if (result.success) {
+            if (result.video_id) {
+                console.log('✅ Получен video_id:', result.video_id);
+                statusDiv.innerHTML = `<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>✅ Видео создается! ID: ${result.video_id}</div>`;
+                
+                // TODO: Добавить polling статуса видео
+                window.currentVideoId = result.video_id;
+                
+            } else if (result.video_url) {
+                console.log('✅ Получен video_url:', result.video_url);
+                statusDiv.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>✅ Видео готово!</div>';
+                
+                // Сохраняем URL для Submagic
+                window.currentVideoUrl = result.video_url;
+                console.log('💾 Сохранен video URL для Submagic:', window.currentVideoUrl);
+                
+                // Показываем видео
+                document.getElementById('videoResult').style.display = 'block';
+                const videoElement = document.getElementById('videoPlayer');
+                const videoSource = document.getElementById('videoSource');
+                videoSource.src = result.video_url;
+                videoElement.load();
+                
+                // АКТИВИРУЕМ ШАГ 6 (Submagic)
+                console.log('✅ Активируем шаг 6');
+                const step6 = document.getElementById('step6');
+                step6.classList.remove('step-disabled');
+                step6.classList.add('step-active');
+                
+                // Плавный скролл к шагу 6
+                setTimeout(() => {
+                    step6.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
+            }
+            
+            if (result.warning) {
+                console.warn('⚠️ Предупреждение:', result.warning);
+            }
+        } else {
+            throw new Error(result.message || 'Неизвестная ошибка');
+        }
+    } catch (error) {
+        console.error('❌ Ошибка генерации видео:', error);
+        statusDiv.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>❌ Ошибка: ${error.message}</div>`;
+    }
+    
+    console.log('🎬 ===== КОНЕЦ ГЕНЕРАЦИИ ВИДЕО =====');
+}
+
+function initializePlyrPlayer(audioUrl) {
+    console.log('🎵 Инициализируем Plyr плеер:', audioUrl);
+    
+    const audioElement = document.getElementById('audioPlayer');
+    const audioSource = document.getElementById('audioSource');
+    
+    if (!audioElement || !audioSource) {
+        console.error('❌ Элементы аудио плеера не найдены');
+        return;
+    }
+    
+    // Уничтожаем старый Plyr плеер если есть
+    if (window.plyrPlayer) {
+        try {
+            if (typeof window.plyrPlayer.destroy === 'function') {
+                window.plyrPlayer.destroy();
+            }
+        } catch (e) {
+            console.warn('⚠️ Ошибка при уничтожении старого плеера:', e);
+        }
+        window.plyrPlayer = null;
+    }
+    
+    // Устанавливаем источник
+    audioSource.src = audioUrl;
+    
+    // Обработчик загрузки метаданных
+    audioElement.onloadedmetadata = function() {
+        console.log('✅ Метаданные загружены, длительность:', audioElement.duration);
+        
+        try {
+            window.plyrPlayer = new Plyr(audioElement, {
+                controls: ['play', 'progress', 'current-time', 'duration', 'volume', 'download'],
+                settings: [],
+                autoplay: false,
+                volume: 0.8
+            });
+            
+            console.log('✅ Plyr плеер инициализирован');
+        } catch (error) {
+            console.error('❌ Ошибка инициализации Plyr:', error);
+        }
+    };
+    
+    // Обработчик ошибок
+    audioElement.onerror = function(e) {
+        console.error('❌ Ошибка загрузки аудио:', e);
+        alert('Ошибка загрузки аудио. Попробуйте сгенерировать аудио заново.');
+    };
+    
+    // Загружаем аудио
+    audioElement.load();
+}
+
+// Функция генерации Submagic
+async function generateSubmagic() {
+    console.log('🎬 ===== ГЕНЕРАЦИЯ SUBMAGIC =====');
+    
+    // Проверяем наличие видео URL
+    if (!window.currentVideoUrl) {
+        alert('❌ Сначала сгенерируйте видео!');
+        console.error('❌ window.currentVideoUrl не установлен');
+        return;
+    }
+    
+    console.log('🔗 Используем video URL:', window.currentVideoUrl);
+    
+    const statusDiv = document.getElementById('submagicStatus');
+    if (!statusDiv) {
+        console.error('❌ Элемент submagicStatus не найден');
+        return;
+    }
+    
+    statusDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>Обрабатываем видео через Submagic...</div>';
+    
+    try {
+        const response = await fetch('/api/vacancies/generate-submagic', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                video_url: window.currentVideoUrl,
+                text: document.getElementById('videoText').value
+            })
+        });
+        
+        console.log('📡 HTTP Status:', response.status);
+        
+        const result = await response.json();
+        console.log('📦 Ответ:', result);
+        
+        if (result.success) {
+            if (result.submagic_url) {
+                console.log('✅ Получен submagic_url:', result.submagic_url);
+                statusDiv.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>✅ Submagic обработка завершена!</div>';
+                
+                // Показываем результат
+                document.getElementById('submagicResult').style.display = 'block';
+                const videoElement = document.getElementById('submagicPlayer');
+                const videoSource = document.getElementById('submagicSource');
+                videoSource.src = result.submagic_url;
+                videoElement.load();
+            }
+            
+            if (result.warning) {
+                console.warn('⚠️ Предупреждение:', result.warning);
+            }
+        } else {
+            throw new Error(result.message || 'Неизвестная ошибка');
+        }
+    } catch (error) {
+        console.error('❌ Ошибка Submagic:', error);
+        statusDiv.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>❌ Ошибка: ${error.message}</div>`;
+    }
+    
+    console.log('🎬 ===== КОНЕЦ SUBMAGIC =====');
+}
+</script>
+{% endblock %}
