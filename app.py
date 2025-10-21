@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Thin wrapper around the full Content Factory application."""
 
-from app_current_backup import create_app as _create_core_app
+from app import create_app as _create_core_app
 
 
 def create_app():
