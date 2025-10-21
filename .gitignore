@@ -42,3 +42,22 @@ deployment_package_*/
 *.tar.gz
 .env
 server_key*
+
+# Cleanup patterns - предотвращение повторного захламления
+test_*.py
+test_*.html
+test_*.csv
+*_backup.py
+simple_*.py
+debug_*.py
+check_*.py
+fix_*.py
+deploy_*.py
+update_*.py
+create_*.py
+execute_*.py
+perform_*.py
+verify_*.py
+chrome_*.html
+audio_player_*.html
+*.log
