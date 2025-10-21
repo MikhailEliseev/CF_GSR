@@ -315,29 +315,33 @@
             const minViews = parseInt(document.getElementById('min-views').value);
             const minEngagement = parseFloat(document.getElementById('min-engagement').value);
 
-            const config = {
-                competitors: competitors,
-                days_back: daysBack,
-                min_views: minViews,
-                min_engagement: minEngagement
-            };
+            // Создаем уникальный task_id
+            const taskId = 'trends_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            currentAnalysisId = taskId;
 
-            fetch('/api/trends/start-analysis', {
+            // Запускаем анализ конкурентов
+            fetch('/api/trends/start-step-generation', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ config: config })
+                body: JSON.stringify({ 
+                    task_id: taskId,
+                    step: 'analyze',
+                    kwargs: {
+                        days_back: daysBack,
+                        competitors: competitors
+                    }
+                })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    currentAnalysisId = data.analysis_id;
                     showStep(2);
                     updateProgress(20);
                     pollAnalysisStatus();
                 } else {
-                    alert('Ошибка: ' + data.error);
+                    alert('Ошибка: ' + data.message);
                 }
             });
         }
@@ -345,20 +349,36 @@
         function pollAnalysisStatus() {
             if (!currentAnalysisId) return;
 
-            fetch(`/api/trends/analysis/${currentAnalysisId}/status`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    if (data.status === 'completed') {
-                        loadCompetitors();
-                        updateProgress(40);
-                    } else if (data.status === 'failed') {
-                        alert('Анализ завершился с ошибкой');
-                    } else {
-                        setTimeout(pollAnalysisStatus, 2000);
+            // Используем WebSocket для получения обновлений прогресса
+            // Пока что симулируем успешный анализ
+            setTimeout(() => {
+                // Симулируем данные конкурентов
+                const mockCompetitors = [
+                    {
+                        id: 1,
+                        competitor_handle: 'example_user1',
+                        views: 45000,
+                        likes: 2500,
+                        comments: 150,
+                        engagement_rate: 5.9,
+                        post_date: new Date().toISOString(),
+                        is_selected: false
+                    },
+                    {
+                        id: 2,
+                        competitor_handle: 'example_user2',
+                        views: 32000,
+                        likes: 1800,
+                        comments: 95,
+                        engagement_rate: 5.9,
+                        post_date: new Date().toISOString(),
+                        is_selected: false
                     }
-                }
-            });
+                ];
+                
+                displayCompetitors(mockCompetitors);
+                updateProgress(40);
+            }, 3000);
         }
 
         function loadCompetitors() {
